@@ -103,15 +103,6 @@ DTYPE H0[M][N], DTYPE H1[M][N],
 DTYPE delta[N], DTYPE bias[N], DTYPE out[N]){
 
 #pragma HLS ARRAY_PARTITION variable=kernel type=complete dim=1
-#pragma HLS ARRAY_PARTITION variable=A type=cyclic dim=1 factor=2
-#pragma HLS ARRAY_PARTITION variable=B type=cyclic dim=1 factor=2
-#pragma HLS ARRAY_PARTITION variable=C type=cyclic dim=1 factor=2
-#pragma HLS ARRAY_PARTITION variable=D type=cyclic dim=1 factor=2
-#pragma HLS ARRAY_PARTITION variable=X type=cyclic dim=1 factor=2
-#pragma HLS ARRAY_PARTITION variable=Z type=cyclic dim=1 factor=2
-#pragma HLS ARRAY_PARTITION variable=bias type=cyclic dim=1 factor=2
-#pragma HLS ARRAY_PARTITION variable=delta type=cyclic dim=1 factor=2
-#pragma HLS ARRAY_PARTITION variable=out type=cyclic dim=1 factor=2
 #pragma HLS INTERFACE m_axi port=H0 offset=slave bundle=gmem0 depth=1000
 #pragma HLS INTERFACE m_axi port=H1 offset=slave bundle=gmem1 depth=1000
 
