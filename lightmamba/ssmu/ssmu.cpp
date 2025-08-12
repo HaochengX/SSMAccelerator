@@ -1,14 +1,17 @@
-#include "ssmu.h"
+#include "lightmamba.h"
 DTYPE sigmoid(DTYPE x){
 	return 1.0 / (1.0 + hls::expf(-x));
 }
 
 DTYPE softplus(DTYPE x){
-	return hls::logf(1.0+hls::expf(x));
+	return (DTYPE)(hls::logf(1.0+hls::expf(x)));
 }
 
 void silu(DTYPE in[N], DTYPE out[N]){
-#pragma HLS PIPELINE II=2
+#pragma HLS INLINE off
+#pragma HLS ARRAY_PARTITION variable=in  type=block factor=4 dim=1
+#pragma HLS ARRAY_PARTITION variable=out type=block factor=4 dim=1
+#pragma HLS PIPELINE II=1
 	for(int j=0; j<N; j++){
 		out[j]=in[j]*sigmoid(in[j]);
 	}
@@ -17,6 +20,9 @@ void silu(DTYPE in[N], DTYPE out[N]){
 
 
 void exp1(DTYPE in[N], DTYPE out[N]){
+#pragma HLS INLINE off
+#pragma HLS ARRAY_PARTITION variable=in type=block factor=4 dim=1
+#pragma HLS ARRAY_PARTITION variable=out type=block factor=4 dim=1
 #pragma HLS PIPELINE II=1
 	for(int j=0; j<N; j++){
 		out[j]=(DTYPE)(hls::expf(in[j]));
@@ -24,9 +30,9 @@ void exp1(DTYPE in[N], DTYPE out[N]){
 }
 
 void conv1d(DTYPE input_X[INPUT_DIM], DTYPE kernel[K], DTYPE Y[N]) {
-#pragma HLS ARRAY_PARTITION variable=kernel type=complete dim=1
+#pragma HLS ARRAY_PARTITION variable=kernel type=block dim=1 factor=2
 	DTYPE window[K];
-#pragma HLS ARRAY_PARTITION variable=window type=complete dim=1
+#pragma HLS ARRAY_PARTITION variable=window type=block dim=1 factor=2
 
 	for (int i = 0; i < N; i++) {
 #pragma HLS PIPELINE II=1
@@ -42,59 +48,30 @@ void conv1d(DTYPE input_X[INPUT_DIM], DTYPE kernel[K], DTYPE Y[N]) {
 		Y[i] = sum;
 	}
 }
-
-void EMU(DTYPE A[N], DTYPE B[N], DTYPE out[N]){
+template <int size>
+void EMU(DTYPE A[size], DTYPE B[size], DTYPE out[size]){
+#pragma HLS INLINE off
+#pragma HLS ARRAY_PARTITION variable=A   type=block factor=4 dim=1
+#pragma HLS ARRAY_PARTITION variable=B   type=block factor=4 dim=1
+#pragma HLS ARRAY_PARTITION variable=out type=block factor=4 dim=1
 #pragma HLS PIPELINE II=1
-	for(int j=0; j<N; j++){
+	for(int j=0; j<size; j++){
 		out[j]=A[j]*B[j];
 	}
 }
 
 
-
-void EAU(DTYPE A[N], DTYPE B[N], DTYPE out[N]){
-#pragma HLS PIPELINE II=2
-	for(int j=0; j<N; j++){
+template <int size>
+void EAU(DTYPE A[size], DTYPE B[size], DTYPE out[size]){
+#pragma HLS INLINE off
+#pragma HLS ARRAY_PARTITION variable=A type=block factor=4 dim=1
+#pragma HLS ARRAY_PARTITION variable=B type=block factor=4 dim=1
+#pragma HLS ARRAY_PARTITION variable=out type=block factor=4 dim=1
+#pragma HLS PIPELINE II=1
+	for(int j=0; j<size; j++){
 		out[j]=A[j]+B[j];
 	}
 }
-
-
-
-void EMU_tiled(const DTYPE A_tile[pp], const DTYPE B_tile[pp], DTYPE out_tile[pp]){
-#pragma HLS PIPELINE II=1
-	for (int j = 0; j < pp; j++) {
-		out_tile[j] = A_tile[j] * B_tile[j];
-	}
-}
-
-
-
-void EAU_tiled(const DTYPE A_tile[pp], const DTYPE B_tile[pp], DTYPE out_tile[pp]){
-#pragma HLS PIPELINE II=1
-	for (int j = 0; j < pp; j++) {
-		out_tile[j] = A_tile[j] + B_tile[j];
-	}
-}
-
-void ACU(DTYPE input[np][pp], DTYPE output[pp]){
-#pragma HLS ARRAY_PARTITION variable=input type=complete dim=2
-#pragma HLS PIPELINE II=1
-	DTYPE sum[pp];
-#pragma HLS ARRAY_PARTITION variable=sum type=complete dim=1
-	for(int i=0; i<pp; i++){
-		sum[i]=0;
-	}
-	for(int j=0; j<np; j++){
-		for(int i=0; i<pp; i++){
-			sum[i]+=input[j][i];
-		}
-	}
-	for(int i=0; i<pp; i++){
-		output[i]=sum[i];
-	}
-}
-
 
 void SSMU(
 DTYPE kernel[K], DTYPE A[N], DTYPE B[N], DTYPE C[N], DTYPE D[N],
@@ -103,11 +80,19 @@ DTYPE H0[M][N], DTYPE H1[M][N],
 DTYPE delta[N], DTYPE bias[N], DTYPE out[N]){
 
 #pragma HLS ARRAY_PARTITION variable=kernel type=complete dim=1
+#pragma HLS ARRAY_PARTITION variable=A  type=block   factor=4 dim=1
+#pragma HLS ARRAY_PARTITION variable=B  type=block   factor=4 dim=1
+#pragma HLS ARRAY_PARTITION variable=C  type=block   factor=4 dim=1
+#pragma HLS ARRAY_PARTITION variable=D  type=block   factor=4 dim=1
+#pragma HLS ARRAY_PARTITION variable=X  type=block   factor=4 dim=1
+#pragma HLS ARRAY_PARTITION variable=Z  type=block   factor=4 dim=1
+#pragma HLS ARRAY_PARTITION variable=delta type=block factor=4 dim=1
+#pragma HLS ARRAY_PARTITION variable=bias type=block factor=4 dim=1
+#pragma HLS ARRAY_PARTITION variable=out type=block  factor=4 dim=1
 #pragma HLS INTERFACE m_axi port=H0 offset=slave bundle=gmem0 depth=1000
 #pragma HLS INTERFACE m_axi port=H1 offset=slave bundle=gmem1 depth=1000
-
     DTYPE dd[N], dA[N], dB[N], dC[N], dX[N], dZ[N], ddA[N], ddX[N], ddB[N], yy1[N], accu_sum[N];
-    EAU(delta, bias, dd);
+    EAU<N>(delta, bias, dd);
     for(int j=0; j<N; j++){
 	    dd[j]=softplus(dd[j]);
     }
@@ -116,9 +101,9 @@ DTYPE delta[N], DTYPE bias[N], DTYPE out[N]){
     silu(C, dC);
     silu(dX, ddX);
     silu(Z, dZ);
-    EMU(dB, dd, ddB);
-    EMU(A, dd, dA);
-    EMU(ddX, D, yy1);
+    EMU<N>(dB, dd, ddB);
+    EMU<N>(A, dd, dA);
+    EMU<N>(ddX, D, yy1);
     exp1(dA, ddA);
 	for (int i = 0; i < N; i++) {
 		accu_sum[i] = 0;
@@ -148,12 +133,16 @@ DTYPE delta[N], DTYPE bias[N], DTYPE out[N]){
 			DTYPE accu_sum_tile[pp];
 			for (int i = 0; i < np; i++) {
 #pragma HLS PIPELINE II=1
-			EMU_tiled(ddA_tile, H0_tile[i], hh0_local[i]);
-			EMU_tiled(ddB_tile, ddX_tile, hh1_local[i]);
-			EAU_tiled(hh0_local[i], hh1_local[i], H1_write_back[i]);
-			EMU_tiled(dC_tile, H1_write_back[i], dH_local[i]);
+			EMU<pp>(ddA_tile, H0_tile[i], hh0_local[i]);
+			EMU<pp>(ddB_tile, ddX_tile, hh1_local[i]);
+			EAU<pp>(hh0_local[i], hh1_local[i], H1_write_back[i]);
+			EMU<pp>(dC_tile, H1_write_back[i], dH_local[i]);
 			}
-			ACU(dH_local, accu_sum_tile);
+			for (int kk=0; kk<pp; kk++) accu_sum_tile[kk]=0;
+			for (int ii=0; ii<np; ii++)
+			  for (int kk=0; kk<pp; kk++)
+			    accu_sum_tile[kk] += dH_local[ii][kk];
+
 			for (int i=0; i<pp; i++) {
 				accu_sum[j_tile*pp + i] += accu_sum_tile[i];
 			}
@@ -165,7 +154,6 @@ DTYPE delta[N], DTYPE bias[N], DTYPE out[N]){
 		}
 	}
 	DTYPE Y[N];
-	EAU(accu_sum, yy1, Y);
-	EMU(Y, dZ, out);
+	EAU<N>(accu_sum, yy1, Y);
+	EMU<N>(Y, dZ, out);
 }
-
