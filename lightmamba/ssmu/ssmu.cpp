@@ -1,11 +1,9 @@
 #include "lightmamba.h"
 DTYPE sigmoid(DTYPE x){
-	return 1.0 / (1.0 + hls::expf(-x));
+	return (DTYPE)(1.0 / (1.0 + hls::expf(-x)));
 }
 
-DTYPE softplus(DTYPE x){
-	return (DTYPE)(hls::logf(1.0+hls::expf(x)));
-}
+
 
 void silu(DTYPE in[N], DTYPE out[N]){
 #pragma HLS INLINE off
@@ -13,11 +11,13 @@ void silu(DTYPE in[N], DTYPE out[N]){
 #pragma HLS ARRAY_PARTITION variable=out type=block factor=4 dim=1
 #pragma HLS PIPELINE II=1
 	for(int j=0; j<N; j++){
-		out[j]=in[j]*sigmoid(in[j]);
+		out[j]=(DTYPE)(in[j]*sigmoid(in[j]));
 	}
 }
 
-
+DTYPE softplus(DTYPE x){
+	return (DTYPE)(hls::logf(1.0+hls::expf(x)));
+}
 
 void exp1(DTYPE in[N], DTYPE out[N]){
 #pragma HLS INLINE off
@@ -78,6 +78,12 @@ DTYPE kernel[K], DTYPE A[N], DTYPE B[N], DTYPE C[N], DTYPE D[N],
 DTYPE X[N], DTYPE Z[N],
 DTYPE H0[M][N], DTYPE H1[M][N],
 DTYPE delta[N], DTYPE bias[N], DTYPE out[N]){
+#pragma HLS INTERFACE ap_memory port=A
+#pragma HLS INTERFACE ap_memory port=D
+#pragma HLS INTERFACE ap_memory port=bias
+#pragma HLS BIND_STORAGE variable=A    type=ram_1p impl=bram
+#pragma HLS BIND_STORAGE variable=D    type=ram_1p impl=bram
+#pragma HLS BIND_STORAGE variable=bias type=ram_1p impl=bram
 
 #pragma HLS ARRAY_PARTITION variable=kernel type=complete dim=1
 #pragma HLS ARRAY_PARTITION variable=A  type=block   factor=4 dim=1
@@ -89,11 +95,13 @@ DTYPE delta[N], DTYPE bias[N], DTYPE out[N]){
 #pragma HLS ARRAY_PARTITION variable=delta type=block factor=4 dim=1
 #pragma HLS ARRAY_PARTITION variable=bias type=block factor=4 dim=1
 #pragma HLS ARRAY_PARTITION variable=out type=block  factor=4 dim=1
+
 #pragma HLS INTERFACE m_axi port=H0 offset=slave bundle=gmem0 depth=1000
 #pragma HLS INTERFACE m_axi port=H1 offset=slave bundle=gmem1 depth=1000
     DTYPE dd[N], dA[N], dB[N], dC[N], dX[N], dZ[N], ddA[N], ddX[N], ddB[N], yy1[N], accu_sum[N];
     EAU<N>(delta, bias, dd);
     for(int j=0; j<N; j++){
+#pragma HLS PIPELINE II=1
 	    dd[j]=softplus(dd[j]);
     }
     conv1d(X, kernel, dX);
@@ -122,6 +130,7 @@ DTYPE delta[N], DTYPE bias[N], DTYPE out[N]){
 				dC_tile[k] = dC[j_tile * pp + k];
 			}
 			for (int i = 0; i < np; i++) {
+#pragma HLS UNROLL
 				for (int k = 0; k < pp; k++) {
 					H0_tile[i][k] = H0[i_tile * np + i][j_tile * pp + k];
 				}
@@ -140,6 +149,7 @@ DTYPE delta[N], DTYPE bias[N], DTYPE out[N]){
 			}
 			for (int kk=0; kk<pp; kk++) accu_sum_tile[kk]=0;
 			for (int ii=0; ii<np; ii++)
+#pragma HLS UNROLL
 			  for (int kk=0; kk<pp; kk++)
 			    accu_sum_tile[kk] += dH_local[ii][kk];
 
@@ -147,6 +157,7 @@ DTYPE delta[N], DTYPE bias[N], DTYPE out[N]){
 				accu_sum[j_tile*pp + i] += accu_sum_tile[i];
 			}
 			for (int i = 0; i < np; i++) {
+#pragma HLS UNROLL
 				for (int k = 0; k < pp; k++) {
 					H1[i_tile * np + i][j_tile * pp + k] = H1_write_back[i][k];
 				}
