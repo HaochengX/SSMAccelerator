@@ -1,31 +1,23 @@
-#include "lightmamba.h"
-DTYPE sigmoid(DTYPE x){
-	return (DTYPE)(1.0 / (1.0 + hls::expf(-x)));
-}
-
-
-
+#include "ssmu.h"
 void silu(DTYPE in[N], DTYPE out[N]){
 #pragma HLS INLINE off
 #pragma HLS ARRAY_PARTITION variable=in  type=block factor=4 dim=1
 #pragma HLS ARRAY_PARTITION variable=out type=block factor=4 dim=1
-#pragma HLS PIPELINE II=1
 	for(int j=0; j<N; j++){
-		out[j]=(DTYPE)(in[j]*sigmoid(in[j]));
+#pragma HLS UNROLL
+		out[j] = in[j] * (DTYPE)(1.0f / (1.0f + hls::expf(-(float)in[j])));
 	}
 }
 
 DTYPE softplus(DTYPE x){
-	return (DTYPE)(hls::logf(1.0+hls::expf(x)));
+	return (DTYPE)(hls::logf(1.0f + hls::expf((float)x)));
 }
 
 void exp1(DTYPE in[N], DTYPE out[N]){
 #pragma HLS INLINE off
-#pragma HLS ARRAY_PARTITION variable=in type=block factor=4 dim=1
-#pragma HLS ARRAY_PARTITION variable=out type=block factor=4 dim=1
-#pragma HLS PIPELINE II=1
 	for(int j=0; j<N; j++){
-		out[j]=(DTYPE)(hls::expf(in[j]));
+#pragma HLS UNROLL
+		out[j] = (DTYPE)hls::expf((float)in[j]);
 	}
 }
 
@@ -54,8 +46,8 @@ void EMU(DTYPE A[size], DTYPE B[size], DTYPE out[size]){
 #pragma HLS ARRAY_PARTITION variable=A   type=block factor=4 dim=1
 #pragma HLS ARRAY_PARTITION variable=B   type=block factor=4 dim=1
 #pragma HLS ARRAY_PARTITION variable=out type=block factor=4 dim=1
-#pragma HLS PIPELINE II=1
 	for(int j=0; j<size; j++){
+#pragma HLS UNROLL
 		out[j]=A[j]*B[j];
 	}
 }
@@ -67,8 +59,8 @@ void EAU(DTYPE A[size], DTYPE B[size], DTYPE out[size]){
 #pragma HLS ARRAY_PARTITION variable=A type=block factor=4 dim=1
 #pragma HLS ARRAY_PARTITION variable=B type=block factor=4 dim=1
 #pragma HLS ARRAY_PARTITION variable=out type=block factor=4 dim=1
-#pragma HLS PIPELINE II=1
 	for(int j=0; j<size; j++){
+#pragma HLS UNROLL
 		out[j]=A[j]+B[j];
 	}
 }
@@ -85,19 +77,9 @@ DTYPE delta[N], DTYPE bias[N], DTYPE out[N]){
 #pragma HLS BIND_STORAGE variable=D    type=ram_1p impl=bram
 #pragma HLS BIND_STORAGE variable=bias type=ram_1p impl=bram
 
-#pragma HLS ARRAY_PARTITION variable=kernel type=complete dim=1
-#pragma HLS ARRAY_PARTITION variable=A  type=block   factor=4 dim=1
-#pragma HLS ARRAY_PARTITION variable=B  type=block   factor=4 dim=1
-#pragma HLS ARRAY_PARTITION variable=C  type=block   factor=4 dim=1
-#pragma HLS ARRAY_PARTITION variable=D  type=block   factor=4 dim=1
-#pragma HLS ARRAY_PARTITION variable=X  type=block   factor=4 dim=1
-#pragma HLS ARRAY_PARTITION variable=Z  type=block   factor=4 dim=1
-#pragma HLS ARRAY_PARTITION variable=delta type=block factor=4 dim=1
-#pragma HLS ARRAY_PARTITION variable=bias type=block factor=4 dim=1
-#pragma HLS ARRAY_PARTITION variable=out type=block  factor=4 dim=1
-
 #pragma HLS INTERFACE m_axi port=H0 offset=slave bundle=gmem0 depth=1000
 #pragma HLS INTERFACE m_axi port=H1 offset=slave bundle=gmem1 depth=1000
+
     DTYPE dd[N], dA[N], dB[N], dC[N], dX[N], dZ[N], ddA[N], ddX[N], ddB[N], yy1[N], accu_sum[N];
     EAU<N>(delta, bias, dd);
     for(int j=0; j<N; j++){
