@@ -1,4 +1,4 @@
-#include "ssmu.h"
+#include "lightmamba.h"
 void silu(DTYPE in[N], DTYPE out[N]){
 #pragma HLS INLINE off
 #pragma HLS ARRAY_PARTITION variable=in  type=block factor=4 dim=1
@@ -70,30 +70,75 @@ DTYPE kernel[K], DTYPE A[N], DTYPE B[N], DTYPE C[N], DTYPE D[N],
 DTYPE X[N], DTYPE Z[N],
 DTYPE H0[M][N], DTYPE H1[M][N],
 DTYPE delta[N], DTYPE bias[N], DTYPE out[N]){
-#pragma HLS INTERFACE ap_memory port=A
-#pragma HLS INTERFACE ap_memory port=D
-#pragma HLS INTERFACE ap_memory port=bias
-#pragma HLS BIND_STORAGE variable=A    type=ram_1p impl=bram
-#pragma HLS BIND_STORAGE variable=D    type=ram_1p impl=bram
-#pragma HLS BIND_STORAGE variable=bias type=ram_1p impl=bram
 
-#pragma HLS INTERFACE m_axi port=H0 offset=slave bundle=gmem0 depth=1000
-#pragma HLS INTERFACE m_axi port=H1 offset=slave bundle=gmem1 depth=1000
+#pragma HLS INTERFACE m_axi port=X offset=slave bundle=data_in
+#pragma HLS INTERFACE m_axi port=out offset=slave bundle=data_out
+#pragma HLS INTERFACE m_axi port=H0 offset=slave bundle=data_Hin
+#pragma HLS INTERFACE m_axi port=H1 offset=slave bundle=data_Hout
+#pragma HLS INTERFACE m_axi port=A offset=slave bundle=data0
+#pragma HLS INTERFACE m_axi port=B offset=slave bundle=data1
+#pragma HLS INTERFACE m_axi port=C offset=slave bundle=data2
+#pragma HLS INTERFACE m_axi port=D offset=slave bundle=data3
+#pragma HLS INTERFACE m_axi port=Z offset=slave bundle=data4
+#pragma HLS INTERFACE m_axi port=delta offset=slave bundle=data5
+#pragma HLS INTERFACE m_axi port=bias offset=slave bundle=data6
+#pragma HLS INTERFACE m_axi port=kernel offset=slave bundle=data7
+#pragma HLS INTERFACE s_axilite register port=return bundle=ctrl
+
+#pragma HLS ALLOCATION function instances=silu limit=1
+
+    DTYPE A_buffer[N];
+    DTYPE B_buffer[N];
+    DTYPE C_buffer[N];
+    DTYPE D_buffer[N];
+    DTYPE Z_buffer[N];
+    DTYPE X_buffer[N];
+    DTYPE delta_buffer[N];
+    DTYPE bias_buffer[N];
+    DTYPE kernel_buffer[K];
+    DTYPE out_buffer[N];
+
+#pragma HLS ARRAY_PARTITION variable=A_buffer type=block factor=4 dim=1
+#pragma HLS ARRAY_PARTITION variable=B_buffer type=block factor=4 dim=1
+#pragma HLS ARRAY_PARTITION variable=C_buffer type=block factor=4 dim=1
+#pragma HLS ARRAY_PARTITION variable=D_buffer type=block factor=4 dim=1
+#pragma HLS ARRAY_PARTITION variable=Z_buffer type=block factor=4 dim=1
+#pragma HLS ARRAY_PARTITION variable=X_buffer type=block factor=4 dim=1
+#pragma HLS ARRAY_PARTITION variable=bias_buffer type=block factor=4 dim=1
+#pragma HLS ARRAY_PARTITION variable=delta_buffer type=block factor=4 dim=1
+#pragma HLS ARRAY_PARTITION variable=kernel_buffer type=block factor=4 dim=1
+#pragma HLS ARRAY_PARTITION variable=out_buffer type=block factor=4 dim=1
+
+    for(int i=0; i<N; i++){
+#pragma HLS PIPELINE II=1
+        A_buffer[i] = A[i];
+        B_buffer[i] = B[i];
+        C_buffer[i] = C[i];
+        D_buffer[i] = D[i];
+        Z_buffer[i] = Z[i];
+        X_buffer[i] = X[i];
+        bias_buffer[i] = bias[i];
+        delta_buffer[i] = delta[i];
+    }
+    for(int i=0; i<K; i++){
+#pragma HLS PIPELINE II=1
+        kernel_buffer[i] = kernel[i];
+    }
 
     DTYPE dd[N], dA[N], dB[N], dC[N], dX[N], dZ[N], ddA[N], ddX[N], ddB[N], yy1[N], accu_sum[N];
-    EAU<N>(delta, bias, dd);
+    EAU<N>(delta_buffer, bias_buffer, dd);
     for(int j=0; j<N; j++){
 #pragma HLS PIPELINE II=1
 	    dd[j]=softplus(dd[j]);
     }
-    conv1d(X, kernel, dX);
-    silu(B, dB);
-    silu(C, dC);
+    conv1d(X_buffer, kernel_buffer, dX);
+    silu(B_buffer, dB);
+    silu(C_buffer, dC);
     silu(dX, ddX);
-    silu(Z, dZ);
+    silu(Z_buffer, dZ);
     EMU<N>(dB, dd, ddB);
-    EMU<N>(A, dd, dA);
-    EMU<N>(ddX, D, yy1);
+    EMU<N>(A_buffer, dd, dA);
+    EMU<N>(ddX, D_buffer, yy1);
     exp1(dA, ddA);
 	for (int i = 0; i < N; i++) {
 		accu_sum[i] = 0;
@@ -148,5 +193,9 @@ DTYPE delta[N], DTYPE bias[N], DTYPE out[N]){
 	}
 	DTYPE Y[N];
 	EAU<N>(accu_sum, yy1, Y);
-	EMU<N>(Y, dZ, out);
+	EMU<N>(Y, dZ, out_buffer);
+	for(int i=0; i<N;i++){
+#pragma HLS UNROLL
+		out[i]=out_buffer[i];
+	}
 }
