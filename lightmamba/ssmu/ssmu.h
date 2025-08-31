@@ -1,11 +1,12 @@
-#ifndef SSMU_H
-#define SSMU_H
+#ifndef LIGHTMAMBA_H
+#define LIGHTMAMBA_H
 
 #include <ap_fixed.h>
 #include <ap_int.h>
 #include <hls_stream.h>
 #include <hls_math.h>
 
+// DTYPE can be integer or fixed point
 //typedef ap_fixed<8, 3> DTYPE;
 typedef ap_int<8> DTYPE;
 //N: dimension; M: width; K: kernel
@@ -30,4 +31,3 @@ DTYPE kernel[K], DTYPE A[N], DTYPE B[N], DTYPE C[N], DTYPE D[N],
 DTYPE X[N], DTYPE Z[N],
 DTYPE H0[M][N], DTYPE H1[M][N], DTYPE delta[N], DTYPE bias[N], DTYPE out[N]);
 #endif
-
