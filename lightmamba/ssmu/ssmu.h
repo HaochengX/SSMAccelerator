@@ -5,29 +5,31 @@
 #include <ap_int.h>
 #include <hls_stream.h>
 #include <hls_math.h>
-
+#include <hls_vector.h>
 // DTYPE can be integer or fixed point
-//typedef ap_fixed<8, 3> DTYPE;
-typedef ap_int<8> DTYPE;
-//N: dimension; M: width; K: kernel
-constexpr int M = 16;
-constexpr int N = 64;
-constexpr int K = 4;
-constexpr int INPUT_DIM = N + K - 1;
-constexpr int pp = 16;
-constexpr int np = 4;
+typedef ap_fixed<8, 3> DTYPE;
+//typedef ap_int<8> DTYPE;
+constexpr int VEC_FACTOR = 16;
+typedef hls::vector<DTYPE,VEC_FACTOR> DTYPE_VEC;
 
-void silu(DTYPE in[N], DTYPE out[N]);
-void exp1(DTYPE in[N], DTYPE out[N]);
-void conv1d(DTYPE input_X[INPUT_DIM], DTYPE kernel[K], DTYPE Y[N]);
-DTYPE softplus(DTYPE x);
-void EMU(DTYPE A[N], DTYPE B[N], DTYPE out[N]);
-void EAU(DTYPE A[N], DTYPE B[N], DTYPE out[N]);
-void EMU_tiled(const DTYPE A_tile[pp], const DTYPE B_tile[pp], DTYPE out_tile[pp]);
-void EAU_tiled(const DTYPE A_tile[pp], const DTYPE B_tile[pp], DTYPE out_tile[pp]);
-void ACU(DTYPE input[np][pp], DTYPE output[pp]);
+//N: dimension; M: width; K: kernel
+#define M 16
+#define N 64
+#define K 4
+#define INPUT_DIM (N + K - 1)
+#define VEC_N (N / VEC_FACTOR)
+
+void silu(DTYPE_VEC in[VEC_N], DTYPE_VEC out[VEC_N]);
+void exp1(DTYPE_VEC in[VEC_N], DTYPE_VEC out[VEC_N]);
+void conv1d(DTYPE_VEC input_X[VEC_N], DTYPE kernel[K], DTYPE_VEC Y[VEC_N]);
+void softplus(DTYPE_VEC in[VEC_N], DTYPE_VEC out[VEC_N]);
+void EMU(DTYPE_VEC A[VEC_N], DTYPE_VEC B[VEC_N], DTYPE_VEC out[VEC_N]);
+void EAU(DTYPE_VEC A[VEC_N], DTYPE_VEC B[VEC_N], DTYPE_VEC out[VEC_N]);
 void SSMU(
-DTYPE kernel[K], DTYPE A[N], DTYPE B[N], DTYPE C[N], DTYPE D[N],
-DTYPE X[N], DTYPE Z[N],
-DTYPE H0[M][N], DTYPE H1[M][N], DTYPE delta[N], DTYPE bias[N], DTYPE out[N]);
+    DTYPE kernel[K],
+    DTYPE_VEC A[VEC_N], DTYPE_VEC B[VEC_N], DTYPE_VEC C[VEC_N], DTYPE_VEC D[VEC_N],
+    DTYPE_VEC X[VEC_N], DTYPE_VEC Z[VEC_N],
+    DTYPE_VEC H0[M][VEC_N], DTYPE_VEC H1[M][VEC_N],
+    DTYPE_VEC delta[VEC_N], DTYPE_VEC bias[VEC_N],
+    DTYPE_VEC out[VEC_N]);
 #endif
