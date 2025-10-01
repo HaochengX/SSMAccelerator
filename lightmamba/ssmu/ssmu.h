@@ -25,6 +25,24 @@ void conv1d(DTYPE_VEC input_X[VEC_N], DTYPE kernel[K], DTYPE_VEC Y[VEC_N]);
 void softplus(DTYPE_VEC in[VEC_N], DTYPE_VEC out[VEC_N]);
 void EMU(DTYPE_VEC A[VEC_N], DTYPE_VEC B[VEC_N], DTYPE_VEC out[VEC_N]);
 void EAU(DTYPE_VEC A[VEC_N], DTYPE_VEC B[VEC_N], DTYPE_VEC out[VEC_N]);
+void producer_function(
+    DTYPE_VEC ddA[VEC_N], DTYPE_VEC ddX[VEC_N], DTYPE_VEC ddB[VEC_N], DTYPE_VEC dC[VEC_N],
+    DTYPE_VEC yy0[VEC_N], DTYPE_VEC H0[M][VEC_N],
+    hls::stream<DTYPE_VEC> &stream_ddA,
+    hls::stream<DTYPE_VEC> &stream_ddX,
+    hls::stream<DTYPE_VEC> &stream_ddB,
+    hls::stream<DTYPE_VEC> &stream_dC,
+    hls::stream<DTYPE_VEC> &stream_yy0,
+    hls::stream<DTYPE_VEC> &stream_H0_in);
+void consumer_function(
+    hls::stream<DTYPE_VEC> &stream_ddA,
+    hls::stream<DTYPE_VEC> &stream_ddX,
+    hls::stream<DTYPE_VEC> &stream_ddB,
+    hls::stream<DTYPE_VEC> &stream_dC,
+    hls::stream<DTYPE_VEC> &stream_yy0,
+    hls::stream<DTYPE_VEC> &stream_H0_in,
+    DTYPE_VEC H1[M][VEC_N],
+    DTYPE_VEC yy0[VEC_N]);
 void SSMU(
     DTYPE kernel[K],
     DTYPE_VEC A[VEC_N], DTYPE_VEC B[VEC_N], DTYPE_VEC C[VEC_N], DTYPE_VEC D[VEC_N],
