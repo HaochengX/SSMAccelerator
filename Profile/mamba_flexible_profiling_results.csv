@@ -1,0 +1,1095 @@
+layer_group,strategy,rank,context_length,num_layers_compressed,perplexity,avg_inference_time,throughput,num_samples
+Original,Original,N/A,128,0,45.93513778830157,0.26814826488494875,477.34785848761493,50
+Original,Original,N/A,512,0,29.017899389637854,0.9372624731063843,546.2717378442242,50
+Original,Original,N/A,1024,0,25.772745444004183,1.8494780492782592,553.6697234117518,50
+Original,Original,N/A,4096,0,20.47078556788312,7.589179821014405,539.7157659459056,25
+in_proj,,64,128,24,4259393.497926185,0.30895806789398195,414.2957032082516,50
+in_proj,,64,512,24,8972311841.640783,0.9004443645477295,568.608145220793,50
+in_proj,,64,1024,24,994430926836.2358,1.730316071510315,591.7993925272834,50
+in_proj,,64,4096,24,52820147661782.734,6.948154172897339,589.5090837185601,25
+in_proj,,128,128,24,160362.1496670502,0.23365248680114747,547.8221171638367,50
+in_proj,,128,512,24,486001.4027744303,0.8768663215637207,583.8974395629057,50
+in_proj,,128,1024,24,691649.7367412876,1.7298134517669679,591.971347519587,50
+in_proj,,128,4096,24,3471097.102557191,6.944501495361328,589.8191544398079,25
+in_proj,,256,128,24,5063.771780039509,0.23420166492462158,546.5375322639023,50
+in_proj,,256,512,24,11372.847915492504,0.8760676288604736,584.4297667589581,50
+in_proj,,256,1024,24,38437.167945660054,1.73122465133667,591.4888048812005,50
+in_proj,,256,4096,24,89529.32896027711,6.953015365600586,589.096929120075,25
+out_proj,,64,128,24,103303.22652800419,0.2337734270095825,547.5387071891332,50
+out_proj,,64,512,24,94445.33330539982,0.8732442331314086,586.31936012219,50
+out_proj,,64,1024,24,127410.42869364742,1.7302644872665405,591.8170357976358,50
+out_proj,,64,4096,24,1653178.4641652736,6.963573598861695,588.203735029031,25
+out_proj,,128,128,24,220350.1510951947,0.232577166557312,550.3549720494942,50
+out_proj,,128,512,24,198132.75068591558,0.8719939708709716,587.1600230086457,50
+out_proj,,128,1024,24,188892.71697691755,1.7367507123947143,589.6067827650752,50
+out_proj,,128,4096,24,320168.124014346,6.957995367050171,588.6752985488824,25
+out_proj,,256,128,24,20136.91050209909,0.23325817108154298,548.7481934995257,50
+out_proj,,256,512,24,25065.234356909536,0.8708779716491699,587.9124477456153,50
+out_proj,,256,1024,24,23033.913743250472,1.7252689790725708,593.5306392342703,50
+out_proj,,256,4096,24,71828.31212352338,6.939205074310303,590.2693400954297,25
+x_proj,,64,128,24,612.0894274248392,0.2331613302230835,548.9761097070964,50
+x_proj,,64,512,24,620.6617675745401,0.8718005895614624,587.2902658365359,50
+x_proj,,64,1024,24,556.1091904353507,1.7244698333740234,593.8056904112295,50
+x_proj,,64,4096,24,520.4486156818143,6.931466989517212,590.9282993332546,25
+x_proj,,128,128,24,45.93513778830157,0.23093608856201173,554.265904463126,50
+x_proj,,128,512,24,29.017899389637854,0.8699513435363769,588.5386623103603,50
+x_proj,,128,1024,24,25.772745444004183,1.7247593545913695,593.7060131165987,50
+x_proj,,128,4096,24,20.47078556788312,6.942197656631469,590.0148919106811,25
+x_proj,,256,128,24,45.93513778830157,0.23345003604888917,548.2971952644899,50
+x_proj,,256,512,24,29.017899389637854,0.8735985517501831,586.0815576837324,50
+x_proj,,256,1024,24,25.772745444004183,1.7247747564315796,593.7007114590277,50
+x_proj,,256,4096,24,20.47078556788312,6.9431358814239506,589.9351632968418,25
+dt_proj,,64,128,24,45.93513778830157,0.23232580184936524,550.9504281534441,50
+dt_proj,,64,512,24,29.017899389637854,0.8700109815597534,588.4983188167208,50
+dt_proj,,64,1024,24,25.772745444004183,1.7281883335113526,592.5280133788574,50
+dt_proj,,64,4096,24,20.47078556788312,6.958384408950805,588.642385828983,25
+dt_proj,,128,128,24,45.93513778830157,0.23285948753356933,549.687716638762,50
+dt_proj,,128,512,24,29.017899389637854,0.8704936933517456,588.1719809233737,50
+dt_proj,,128,1024,24,25.772745444004183,1.722447943687439,594.5027272103257,50
+dt_proj,,128,4096,24,20.47078556788312,6.9325635051727295,590.8348328787426,25
+dt_proj,,256,128,24,45.93513778830157,0.2328072214126587,549.8111236554628,50
+dt_proj,,256,512,24,29.017899389637854,0.8708754920959473,587.9141216475882,50
+dt_proj,,256,1024,24,25.772745444004183,1.7236657762527465,594.0826894098799,50
+dt_proj,,256,4096,24,20.47078556788312,6.9600922393798825,588.4979478899747,25
+all_proj,,64,128,96,20352850.951531548,0.23202887058258057,551.6554887269684,50
+all_proj,,64,512,96,98694834.06821695,0.8702076148986816,588.36534090731,50
+all_proj,,64,1024,96,355164866.16530436,1.7234651851654053,594.1518336511823,50
+all_proj,,64,4096,96,2132288015.4090931,6.930371618270874,591.0216977689215,25
+all_proj,,128,128,96,6070134.929820763,0.23305196285247803,549.2337349719043,50
+all_proj,,128,512,96,20099676.05608253,0.8697307395935059,588.687942936567,50
+all_proj,,128,1024,96,21316064.373555794,1.7221122646331788,594.6186093843996,50
+all_proj,,128,4096,96,26108927.328725774,6.92980206489563,591.0702732404363,25
+all_proj,,256,128,96,4857930.977274079,0.2311717987060547,553.7007572569772,50
+all_proj,,256,512,96,28244071.051947594,0.8703822040557861,588.2473212505893,50
+all_proj,,256,1024,96,40833995.697992355,1.7223100090026855,594.550339165104,50
+all_proj,,256,4096,96,26736677.22942245,6.9287428855896,591.160628650092,25
+,Strategy_1_Conservative,,128,96,4857930.977274079,0.23261343479156493,550.2691627192359,50
+,Strategy_1_Conservative,,512,96,28244071.051947594,0.8700525665283203,588.4701909942983,50
+,Strategy_1_Conservative,,1024,96,40833995.697992355,1.726614580154419,593.0680835026998,50
+,Strategy_1_Conservative,,4096,96,26736677.22942245,6.952119636535644,589.1728298912163,25
+,Strategy_2_Aggressive,,128,96,86644921.93216346,0.23176196575164795,552.2907936376521,50
+,Strategy_2_Aggressive,,512,96,36551061.67241274,0.8719922494888306,587.1611821092893,50
+,Strategy_2_Aggressive,,1024,96,85152991.64399046,1.7282213068008423,592.5167083465452,50
+,Strategy_2_Aggressive,,4096,96,53984360453.825905,6.957134895324707,588.7481070336253,25
+,Strategy_3_Uniform,,128,97,7620768.295171917,0.23175535202026368,552.3065546672175,50
+,Strategy_3_Uniform,,512,97,3221523.1629441935,0.8702880096435547,588.3109893812058,50
+,Strategy_3_Uniform,,1024,97,2827271.887462361,1.7250706911087037,593.598862514947,50
+,Strategy_3_Uniform,,4096,97,1696003.3918013284,6.945776195526123,589.7109098675385,25
+
+
+Testing Layer Group: x_proj (rank=128)
+============================================================
+Selected 24 layers
+
+Applying selective low-rank compression...
+Compressing 24 layers
+  backbone.layers.0.mixer.x_proj: rank=128
+  backbone.layers.1.mixer.x_proj: rank=128
+  backbone.layers.2.mixer.x_proj: rank=128
+  backbone.layers.3.mixer.x_proj: rank=128
+  backbone.layers.4.mixer.x_proj: rank=128
+  backbone.layers.5.mixer.x_proj: rank=128
+  backbone.layers.6.mixer.x_proj: rank=128
+  backbone.layers.7.mixer.x_proj: rank=128
+  backbone.layers.8.mixer.x_proj: rank=128
+  backbone.layers.9.mixer.x_proj: rank=128
+  backbone.layers.10.mixer.x_proj: rank=128
+  backbone.layers.11.mixer.x_proj: rank=128
+  backbone.layers.12.mixer.x_proj: rank=128
+  backbone.layers.13.mixer.x_proj: rank=128
+  backbone.layers.14.mixer.x_proj: rank=128
+  backbone.layers.15.mixer.x_proj: rank=128
+  backbone.layers.16.mixer.x_proj: rank=128
+  backbone.layers.17.mixer.x_proj: rank=128
+  backbone.layers.18.mixer.x_proj: rank=128
+  backbone.layers.19.mixer.x_proj: rank=128
+  backbone.layers.20.mixer.x_proj: rank=128
+  backbone.layers.21.mixer.x_proj: rank=128
+  backbone.layers.22.mixer.x_proj: rank=128
+  backbone.layers.23.mixer.x_proj: rank=128
+
+  Overall compression: 1.00x
+  Parameter reduction: 0.0%
+
+  Context length: 128
+    PPL: 45.935                                                                                                                                                                                               
+
+  Context length: 512
+    PPL: 29.018                                                                                                                                                                                               
+
+  Context length: 1024
+    PPL: 25.773                                                                                                                                                                                               
+
+  Context length: 4096
+    PPL: 20.471                                                                                                                                                                                                         
+
+============================================================
+Testing Layer Group: x_proj (rank=256)
+============================================================
+Selected 24 layers
+
+Applying selective low-rank compression...
+Compressing 24 layers
+  backbone.layers.0.mixer.x_proj: rank=256
+  backbone.layers.1.mixer.x_proj: rank=256
+  backbone.layers.2.mixer.x_proj: rank=256
+  backbone.layers.3.mixer.x_proj: rank=256
+  backbone.layers.4.mixer.x_proj: rank=256
+  backbone.layers.5.mixer.x_proj: rank=256
+  backbone.layers.6.mixer.x_proj: rank=256
+  backbone.layers.7.mixer.x_proj: rank=256
+  backbone.layers.8.mixer.x_proj: rank=256
+  backbone.layers.9.mixer.x_proj: rank=256
+  backbone.layers.10.mixer.x_proj: rank=256
+  backbone.layers.11.mixer.x_proj: rank=256
+  backbone.layers.12.mixer.x_proj: rank=256
+  backbone.layers.13.mixer.x_proj: rank=256
+  backbone.layers.14.mixer.x_proj: rank=256
+  backbone.layers.15.mixer.x_proj: rank=256
+  backbone.layers.16.mixer.x_proj: rank=256
+  backbone.layers.17.mixer.x_proj: rank=256
+  backbone.layers.18.mixer.x_proj: rank=256
+  backbone.layers.19.mixer.x_proj: rank=256
+  backbone.layers.20.mixer.x_proj: rank=256
+  backbone.layers.21.mixer.x_proj: rank=256
+  backbone.layers.22.mixer.x_proj: rank=256
+  backbone.layers.23.mixer.x_proj: rank=256
+
+  Overall compression: 1.00x
+  Parameter reduction: 0.0%
+
+  Context length: 128
+    PPL: 45.935                                                                                                                                                                                                              
+
+  Context length: 512
+    PPL: 29.018                                                                                                                                                                                                              
+
+  Context length: 1024
+    PPL: 25.773                                                                                                                                                                                                              
+
+  Context length: 4096
+    PPL: 20.471                                                                                                                                                                                                              
+
+============================================================
+Testing Layer Group: dt_proj (rank=64)
+============================================================
+Selected 24 layers
+
+Applying selective low-rank compression...
+Compressing 24 layers
+  backbone.layers.0.mixer.dt_proj: rank=64
+  backbone.layers.1.mixer.dt_proj: rank=64
+  backbone.layers.2.mixer.dt_proj: rank=64
+  backbone.layers.3.mixer.dt_proj: rank=64
+  backbone.layers.4.mixer.dt_proj: rank=64
+  backbone.layers.5.mixer.dt_proj: rank=64
+  backbone.layers.6.mixer.dt_proj: rank=64
+  backbone.layers.7.mixer.dt_proj: rank=64
+  backbone.layers.8.mixer.dt_proj: rank=64
+  backbone.layers.9.mixer.dt_proj: rank=64
+  backbone.layers.10.mixer.dt_proj: rank=64
+  backbone.layers.11.mixer.dt_proj: rank=64
+  backbone.layers.12.mixer.dt_proj: rank=64
+  backbone.layers.13.mixer.dt_proj: rank=64
+  backbone.layers.14.mixer.dt_proj: rank=64
+  backbone.layers.15.mixer.dt_proj: rank=64
+  backbone.layers.16.mixer.dt_proj: rank=64
+  backbone.layers.17.mixer.dt_proj: rank=64
+  backbone.layers.18.mixer.dt_proj: rank=64
+  backbone.layers.19.mixer.dt_proj: rank=64
+  backbone.layers.20.mixer.dt_proj: rank=64
+  backbone.layers.21.mixer.dt_proj: rank=64
+  backbone.layers.22.mixer.dt_proj: rank=64
+  backbone.layers.23.mixer.dt_proj: rank=64
+
+  Overall compression: 1.00x
+  Parameter reduction: 0.0%
+
+  Context length: 128
+    PPL: 45.935                                                                                                                                                                                                              
+
+  Context length: 512
+    PPL: 29.018                                                                                                                                                                                                              
+
+  Context length: 1024
+    PPL: 25.773                                                                                                                                                                                                              
+
+  Context length: 4096
+    PPL: 20.471                                                                                                                                                                                                              
+
+============================================================
+Testing Layer Group: dt_proj (rank=128)
+============================================================
+Selected 24 layers
+
+Applying selective low-rank compression...
+Compressing 24 layers
+  backbone.layers.0.mixer.dt_proj: rank=128
+  backbone.layers.1.mixer.dt_proj: rank=128
+  backbone.layers.2.mixer.dt_proj: rank=128
+  backbone.layers.3.mixer.dt_proj: rank=128
+  backbone.layers.4.mixer.dt_proj: rank=128
+  backbone.layers.5.mixer.dt_proj: rank=128
+  backbone.layers.6.mixer.dt_proj: rank=128
+  backbone.layers.7.mixer.dt_proj: rank=128
+  backbone.layers.8.mixer.dt_proj: rank=128
+  backbone.layers.9.mixer.dt_proj: rank=128
+  backbone.layers.10.mixer.dt_proj: rank=128
+  backbone.layers.11.mixer.dt_proj: rank=128
+  backbone.layers.12.mixer.dt_proj: rank=128
+  backbone.layers.13.mixer.dt_proj: rank=128
+  backbone.layers.14.mixer.dt_proj: rank=128
+  backbone.layers.15.mixer.dt_proj: rank=128
+  backbone.layers.16.mixer.dt_proj: rank=128
+  backbone.layers.17.mixer.dt_proj: rank=128
+  backbone.layers.18.mixer.dt_proj: rank=128
+  backbone.layers.19.mixer.dt_proj: rank=128
+  backbone.layers.20.mixer.dt_proj: rank=128
+  backbone.layers.21.mixer.dt_proj: rank=128
+  backbone.layers.22.mixer.dt_proj: rank=128
+  backbone.layers.23.mixer.dt_proj: rank=128
+
+  Overall compression: 1.00x
+  Parameter reduction: 0.0%
+
+  Context length: 128
+    PPL: 45.935                                                                                                                                                                                                              
+
+  Context length: 512
+    PPL: 29.018                                                                                                                                                                                                              
+
+  Context length: 1024
+    PPL: 25.773                                                                                                                                                                                                              
+
+  Context length: 4096
+    PPL: 20.471                                                                                                                                                                                                              
+
+============================================================
+Testing Layer Group: dt_proj (rank=256)
+============================================================
+Selected 24 layers
+
+Applying selective low-rank compression...
+Compressing 24 layers
+  backbone.layers.0.mixer.dt_proj: rank=256
+  backbone.layers.1.mixer.dt_proj: rank=256
+  backbone.layers.2.mixer.dt_proj: rank=256
+  backbone.layers.3.mixer.dt_proj: rank=256
+  backbone.layers.4.mixer.dt_proj: rank=256
+  backbone.layers.5.mixer.dt_proj: rank=256
+  backbone.layers.6.mixer.dt_proj: rank=256
+  backbone.layers.7.mixer.dt_proj: rank=256
+  backbone.layers.8.mixer.dt_proj: rank=256
+  backbone.layers.9.mixer.dt_proj: rank=256
+  backbone.layers.10.mixer.dt_proj: rank=256
+  backbone.layers.11.mixer.dt_proj: rank=256
+  backbone.layers.12.mixer.dt_proj: rank=256
+  backbone.layers.13.mixer.dt_proj: rank=256
+  backbone.layers.14.mixer.dt_proj: rank=256
+  backbone.layers.15.mixer.dt_proj: rank=256
+  backbone.layers.16.mixer.dt_proj: rank=256
+  backbone.layers.17.mixer.dt_proj: rank=256
+  backbone.layers.18.mixer.dt_proj: rank=256
+  backbone.layers.19.mixer.dt_proj: rank=256
+  backbone.layers.20.mixer.dt_proj: rank=256
+  backbone.layers.21.mixer.dt_proj: rank=256
+  backbone.layers.22.mixer.dt_proj: rank=256
+  backbone.layers.23.mixer.dt_proj: rank=256
+
+  Overall compression: 1.00x
+  Parameter reduction: 0.0%
+
+  Context length: 128
+    PPL: 45.935                                                                                                                                                                                                              
+
+  Context length: 512
+    PPL: 29.018                                                                                                                                                                                                              
+
+  Context length: 1024
+    PPL: 25.773                                                                                                                                                                                                              
+
+  Context length: 4096
+    PPL: 20.471                                                                                                                                                                                                              
+
+============================================================
+Testing Layer Group: conv1d (rank=64)
+============================================================
+Selected 0 layers
+No layers found for this group!
+
+============================================================
+Testing Layer Group: conv1d (rank=128)
+============================================================
+Selected 0 layers
+No layers found for this group!
+
+============================================================
+Testing Layer Group: conv1d (rank=256)
+============================================================
+Selected 0 layers
+No layers found for this group!
+
+============================================================
+Testing Layer Group: all_proj (rank=64)
+============================================================
+Selected 96 layers
+
+Applying selective low-rank compression...
+Compressing 96 layers
+  backbone.layers.0.mixer.in_proj: rank=64
+  backbone.layers.0.mixer.x_proj: rank=64
+  backbone.layers.0.mixer.dt_proj: rank=64
+  backbone.layers.0.mixer.out_proj: rank=64
+  backbone.layers.1.mixer.in_proj: rank=64
+  backbone.layers.1.mixer.x_proj: rank=64
+  backbone.layers.1.mixer.dt_proj: rank=64
+  backbone.layers.1.mixer.out_proj: rank=64
+  backbone.layers.2.mixer.in_proj: rank=64
+  backbone.layers.2.mixer.x_proj: rank=64
+  backbone.layers.2.mixer.dt_proj: rank=64
+  backbone.layers.2.mixer.out_proj: rank=64
+  backbone.layers.3.mixer.in_proj: rank=64
+  backbone.layers.3.mixer.x_proj: rank=64
+  backbone.layers.3.mixer.dt_proj: rank=64
+  backbone.layers.3.mixer.out_proj: rank=64
+  backbone.layers.4.mixer.in_proj: rank=64
+  backbone.layers.4.mixer.x_proj: rank=64
+  backbone.layers.4.mixer.dt_proj: rank=64
+  backbone.layers.4.mixer.out_proj: rank=64
+  backbone.layers.5.mixer.in_proj: rank=64
+  backbone.layers.5.mixer.x_proj: rank=64
+  backbone.layers.5.mixer.dt_proj: rank=64
+  backbone.layers.5.mixer.out_proj: rank=64
+  backbone.layers.6.mixer.in_proj: rank=64
+  backbone.layers.6.mixer.x_proj: rank=64
+  backbone.layers.6.mixer.dt_proj: rank=64
+  backbone.layers.6.mixer.out_proj: rank=64
+  backbone.layers.7.mixer.in_proj: rank=64
+  backbone.layers.7.mixer.x_proj: rank=64
+  backbone.layers.7.mixer.dt_proj: rank=64
+  backbone.layers.7.mixer.out_proj: rank=64
+  backbone.layers.8.mixer.in_proj: rank=64
+  backbone.layers.8.mixer.x_proj: rank=64
+  backbone.layers.8.mixer.dt_proj: rank=64
+  backbone.layers.8.mixer.out_proj: rank=64
+  backbone.layers.9.mixer.in_proj: rank=64
+  backbone.layers.9.mixer.x_proj: rank=64
+  backbone.layers.9.mixer.dt_proj: rank=64
+  backbone.layers.9.mixer.out_proj: rank=64
+  backbone.layers.10.mixer.in_proj: rank=64
+  backbone.layers.10.mixer.x_proj: rank=64
+  backbone.layers.10.mixer.dt_proj: rank=64
+  backbone.layers.10.mixer.out_proj: rank=64
+  backbone.layers.11.mixer.in_proj: rank=64
+  backbone.layers.11.mixer.x_proj: rank=64
+  backbone.layers.11.mixer.dt_proj: rank=64
+  backbone.layers.11.mixer.out_proj: rank=64
+  backbone.layers.12.mixer.in_proj: rank=64
+  backbone.layers.12.mixer.x_proj: rank=64
+  backbone.layers.12.mixer.dt_proj: rank=64
+  backbone.layers.12.mixer.out_proj: rank=64
+  backbone.layers.13.mixer.in_proj: rank=64
+  backbone.layers.13.mixer.x_proj: rank=64
+  backbone.layers.13.mixer.dt_proj: rank=64
+  backbone.layers.13.mixer.out_proj: rank=64
+  backbone.layers.14.mixer.in_proj: rank=64
+  backbone.layers.14.mixer.x_proj: rank=64
+  backbone.layers.14.mixer.dt_proj: rank=64
+  backbone.layers.14.mixer.out_proj: rank=64
+  backbone.layers.15.mixer.in_proj: rank=64
+  backbone.layers.15.mixer.x_proj: rank=64
+  backbone.layers.15.mixer.dt_proj: rank=64
+  backbone.layers.15.mixer.out_proj: rank=64
+  backbone.layers.16.mixer.in_proj: rank=64
+  backbone.layers.16.mixer.x_proj: rank=64
+  backbone.layers.16.mixer.dt_proj: rank=64
+  backbone.layers.16.mixer.out_proj: rank=64
+  backbone.layers.17.mixer.in_proj: rank=64
+  backbone.layers.17.mixer.x_proj: rank=64
+  backbone.layers.17.mixer.dt_proj: rank=64
+  backbone.layers.17.mixer.out_proj: rank=64
+  backbone.layers.18.mixer.in_proj: rank=64
+  backbone.layers.18.mixer.x_proj: rank=64
+  backbone.layers.18.mixer.dt_proj: rank=64
+  backbone.layers.18.mixer.out_proj: rank=64
+  backbone.layers.19.mixer.in_proj: rank=64
+  backbone.layers.19.mixer.x_proj: rank=64
+  backbone.layers.19.mixer.dt_proj: rank=64
+  backbone.layers.19.mixer.out_proj: rank=64
+  backbone.layers.20.mixer.in_proj: rank=64
+  backbone.layers.20.mixer.x_proj: rank=64
+  backbone.layers.20.mixer.dt_proj: rank=64
+  backbone.layers.20.mixer.out_proj: rank=64
+  backbone.layers.21.mixer.in_proj: rank=64
+  backbone.layers.21.mixer.x_proj: rank=64
+  backbone.layers.21.mixer.dt_proj: rank=64
+  backbone.layers.21.mixer.out_proj: rank=64
+  backbone.layers.22.mixer.in_proj: rank=64
+  backbone.layers.22.mixer.x_proj: rank=64
+  backbone.layers.22.mixer.dt_proj: rank=64
+  backbone.layers.22.mixer.out_proj: rank=64
+  backbone.layers.23.mixer.in_proj: rank=64
+  backbone.layers.23.mixer.x_proj: rank=64
+  backbone.layers.23.mixer.dt_proj: rank=64
+  backbone.layers.23.mixer.out_proj: rank=64
+
+  Overall compression: 6.55x
+  Parameter reduction: 84.7%
+
+  Context length: 128
+    PPL: 20352850.952                                                                                                                                                                                                        
+
+  Context length: 512
+    PPL: 98694834.068                                                                                                                                                                                                        
+
+  Context length: 1024
+    PPL: 355164866.165                                                                                                                                                                                                       
+
+  Context length: 4096
+    PPL: 2132288015.409                                                                                                                                                                                                      
+
+============================================================
+Testing Layer Group: all_proj (rank=128)
+============================================================
+Selected 96 layers
+
+Applying selective low-rank compression...
+Compressing 96 layers
+  backbone.layers.0.mixer.in_proj: rank=128
+  backbone.layers.0.mixer.x_proj: rank=128
+  backbone.layers.0.mixer.dt_proj: rank=128
+  backbone.layers.0.mixer.out_proj: rank=128
+  backbone.layers.1.mixer.in_proj: rank=128
+  backbone.layers.1.mixer.x_proj: rank=128
+  backbone.layers.1.mixer.dt_proj: rank=128
+  backbone.layers.1.mixer.out_proj: rank=128
+  backbone.layers.2.mixer.in_proj: rank=128
+  backbone.layers.2.mixer.x_proj: rank=128
+  backbone.layers.2.mixer.dt_proj: rank=128
+  backbone.layers.2.mixer.out_proj: rank=128
+  backbone.layers.3.mixer.in_proj: rank=128
+  backbone.layers.3.mixer.x_proj: rank=128
+  backbone.layers.3.mixer.dt_proj: rank=128
+  backbone.layers.3.mixer.out_proj: rank=128
+  backbone.layers.4.mixer.in_proj: rank=128
+  backbone.layers.4.mixer.x_proj: rank=128
+  backbone.layers.4.mixer.dt_proj: rank=128
+  backbone.layers.4.mixer.out_proj: rank=128
+  backbone.layers.5.mixer.in_proj: rank=128
+  backbone.layers.5.mixer.x_proj: rank=128
+  backbone.layers.5.mixer.dt_proj: rank=128
+  backbone.layers.5.mixer.out_proj: rank=128
+  backbone.layers.6.mixer.in_proj: rank=128
+  backbone.layers.6.mixer.x_proj: rank=128
+  backbone.layers.6.mixer.dt_proj: rank=128
+  backbone.layers.6.mixer.out_proj: rank=128
+  backbone.layers.7.mixer.in_proj: rank=128
+  backbone.layers.7.mixer.x_proj: rank=128
+  backbone.layers.7.mixer.dt_proj: rank=128
+  backbone.layers.7.mixer.out_proj: rank=128
+  backbone.layers.8.mixer.in_proj: rank=128
+  backbone.layers.8.mixer.x_proj: rank=128
+  backbone.layers.8.mixer.dt_proj: rank=128
+  backbone.layers.8.mixer.out_proj: rank=128
+  backbone.layers.9.mixer.in_proj: rank=128
+  backbone.layers.9.mixer.x_proj: rank=128
+  backbone.layers.9.mixer.dt_proj: rank=128
+  backbone.layers.9.mixer.out_proj: rank=128
+  backbone.layers.10.mixer.in_proj: rank=128
+  backbone.layers.10.mixer.x_proj: rank=128
+  backbone.layers.10.mixer.dt_proj: rank=128
+  backbone.layers.10.mixer.out_proj: rank=128
+  backbone.layers.11.mixer.in_proj: rank=128
+  backbone.layers.11.mixer.x_proj: rank=128
+  backbone.layers.11.mixer.dt_proj: rank=128
+  backbone.layers.11.mixer.out_proj: rank=128
+  backbone.layers.12.mixer.in_proj: rank=128
+  backbone.layers.12.mixer.x_proj: rank=128
+  backbone.layers.12.mixer.dt_proj: rank=128
+  backbone.layers.12.mixer.out_proj: rank=128
+  backbone.layers.13.mixer.in_proj: rank=128
+  backbone.layers.13.mixer.x_proj: rank=128
+  backbone.layers.13.mixer.dt_proj: rank=128
+  backbone.layers.13.mixer.out_proj: rank=128
+  backbone.layers.14.mixer.in_proj: rank=128
+  backbone.layers.14.mixer.x_proj: rank=128
+  backbone.layers.14.mixer.dt_proj: rank=128
+  backbone.layers.14.mixer.out_proj: rank=128
+  backbone.layers.15.mixer.in_proj: rank=128
+  backbone.layers.15.mixer.x_proj: rank=128
+  backbone.layers.15.mixer.dt_proj: rank=128
+  backbone.layers.15.mixer.out_proj: rank=128
+  backbone.layers.16.mixer.in_proj: rank=128
+  backbone.layers.16.mixer.x_proj: rank=128
+  backbone.layers.16.mixer.dt_proj: rank=128
+  backbone.layers.16.mixer.out_proj: rank=128
+  backbone.layers.17.mixer.in_proj: rank=128
+  backbone.layers.17.mixer.x_proj: rank=128
+  backbone.layers.17.mixer.dt_proj: rank=128
+  backbone.layers.17.mixer.out_proj: rank=128
+  backbone.layers.18.mixer.in_proj: rank=128
+  backbone.layers.18.mixer.x_proj: rank=128
+  backbone.layers.18.mixer.dt_proj: rank=128
+  backbone.layers.18.mixer.out_proj: rank=128
+  backbone.layers.19.mixer.in_proj: rank=128
+  backbone.layers.19.mixer.x_proj: rank=128
+  backbone.layers.19.mixer.dt_proj: rank=128
+  backbone.layers.19.mixer.out_proj: rank=128
+  backbone.layers.20.mixer.in_proj: rank=128
+  backbone.layers.20.mixer.x_proj: rank=128
+  backbone.layers.20.mixer.dt_proj: rank=128
+  backbone.layers.20.mixer.out_proj: rank=128
+  backbone.layers.21.mixer.in_proj: rank=128
+  backbone.layers.21.mixer.x_proj: rank=128
+  backbone.layers.21.mixer.dt_proj: rank=128
+  backbone.layers.21.mixer.out_proj: rank=128
+  backbone.layers.22.mixer.in_proj: rank=128
+  backbone.layers.22.mixer.x_proj: rank=128
+  backbone.layers.22.mixer.dt_proj: rank=128
+  backbone.layers.22.mixer.out_proj: rank=128
+  backbone.layers.23.mixer.in_proj: rank=128
+  backbone.layers.23.mixer.x_proj: rank=128
+  backbone.layers.23.mixer.dt_proj: rank=128
+  backbone.layers.23.mixer.out_proj: rank=128
+
+  Overall compression: 3.80x
+  Parameter reduction: 73.7%
+
+  Context length: 128
+    PPL: 6070134.930                                                                                                                                                                                                         
+
+  Context length: 512
+    PPL: 20099676.056                                                                                                                                                                                                        
+
+  Context length: 1024
+    PPL: 21316064.374                                                                                                                                                                                                        
+
+  Context length: 4096
+    PPL: 26108927.329                                                                                                                                                                                                        
+
+============================================================
+Testing Layer Group: all_proj (rank=256)
+============================================================
+Selected 96 layers
+
+Applying selective low-rank compression...
+Compressing 96 layers
+  backbone.layers.0.mixer.in_proj: rank=256
+  backbone.layers.0.mixer.x_proj: rank=256
+  backbone.layers.0.mixer.dt_proj: rank=256
+  backbone.layers.0.mixer.out_proj: rank=256
+  backbone.layers.1.mixer.in_proj: rank=256
+  backbone.layers.1.mixer.x_proj: rank=256
+  backbone.layers.1.mixer.dt_proj: rank=256
+  backbone.layers.1.mixer.out_proj: rank=256
+  backbone.layers.2.mixer.in_proj: rank=256
+  backbone.layers.2.mixer.x_proj: rank=256
+  backbone.layers.2.mixer.dt_proj: rank=256
+  backbone.layers.2.mixer.out_proj: rank=256
+  backbone.layers.3.mixer.in_proj: rank=256
+  backbone.layers.3.mixer.x_proj: rank=256
+  backbone.layers.3.mixer.dt_proj: rank=256
+  backbone.layers.3.mixer.out_proj: rank=256
+  backbone.layers.4.mixer.in_proj: rank=256
+  backbone.layers.4.mixer.x_proj: rank=256
+  backbone.layers.4.mixer.dt_proj: rank=256
+  backbone.layers.4.mixer.out_proj: rank=256
+  backbone.layers.5.mixer.in_proj: rank=256
+  backbone.layers.5.mixer.x_proj: rank=256
+  backbone.layers.5.mixer.dt_proj: rank=256
+  backbone.layers.5.mixer.out_proj: rank=256
+  backbone.layers.6.mixer.in_proj: rank=256
+  backbone.layers.6.mixer.x_proj: rank=256
+  backbone.layers.6.mixer.dt_proj: rank=256
+  backbone.layers.6.mixer.out_proj: rank=256
+  backbone.layers.7.mixer.in_proj: rank=256
+  backbone.layers.7.mixer.x_proj: rank=256
+  backbone.layers.7.mixer.dt_proj: rank=256
+  backbone.layers.7.mixer.out_proj: rank=256
+  backbone.layers.8.mixer.in_proj: rank=256
+  backbone.layers.8.mixer.x_proj: rank=256
+  backbone.layers.8.mixer.dt_proj: rank=256
+  backbone.layers.8.mixer.out_proj: rank=256
+  backbone.layers.9.mixer.in_proj: rank=256
+  backbone.layers.9.mixer.x_proj: rank=256
+  backbone.layers.9.mixer.dt_proj: rank=256
+  backbone.layers.9.mixer.out_proj: rank=256
+  backbone.layers.10.mixer.in_proj: rank=256
+  backbone.layers.10.mixer.x_proj: rank=256
+  backbone.layers.10.mixer.dt_proj: rank=256
+  backbone.layers.10.mixer.out_proj: rank=256
+  backbone.layers.11.mixer.in_proj: rank=256
+  backbone.layers.11.mixer.x_proj: rank=256
+  backbone.layers.11.mixer.dt_proj: rank=256
+  backbone.layers.11.mixer.out_proj: rank=256
+  backbone.layers.12.mixer.in_proj: rank=256
+  backbone.layers.12.mixer.x_proj: rank=256
+  backbone.layers.12.mixer.dt_proj: rank=256
+  backbone.layers.12.mixer.out_proj: rank=256
+  backbone.layers.13.mixer.in_proj: rank=256
+  backbone.layers.13.mixer.x_proj: rank=256
+  backbone.layers.13.mixer.dt_proj: rank=256
+  backbone.layers.13.mixer.out_proj: rank=256
+  backbone.layers.14.mixer.in_proj: rank=256
+  backbone.layers.14.mixer.x_proj: rank=256
+  backbone.layers.14.mixer.dt_proj: rank=256
+  backbone.layers.14.mixer.out_proj: rank=256
+  backbone.layers.15.mixer.in_proj: rank=256
+  backbone.layers.15.mixer.x_proj: rank=256
+  backbone.layers.15.mixer.dt_proj: rank=256
+  backbone.layers.15.mixer.out_proj: rank=256
+  backbone.layers.16.mixer.in_proj: rank=256
+  backbone.layers.16.mixer.x_proj: rank=256
+  backbone.layers.16.mixer.dt_proj: rank=256
+  backbone.layers.16.mixer.out_proj: rank=256
+  backbone.layers.17.mixer.in_proj: rank=256
+  backbone.layers.17.mixer.x_proj: rank=256
+  backbone.layers.17.mixer.dt_proj: rank=256
+  backbone.layers.17.mixer.out_proj: rank=256
+  backbone.layers.18.mixer.in_proj: rank=256
+  backbone.layers.18.mixer.x_proj: rank=256
+  backbone.layers.18.mixer.dt_proj: rank=256
+  backbone.layers.18.mixer.out_proj: rank=256
+  backbone.layers.19.mixer.in_proj: rank=256
+  backbone.layers.19.mixer.x_proj: rank=256
+  backbone.layers.19.mixer.dt_proj: rank=256
+  backbone.layers.19.mixer.out_proj: rank=256
+  backbone.layers.20.mixer.in_proj: rank=256
+  backbone.layers.20.mixer.x_proj: rank=256
+  backbone.layers.20.mixer.dt_proj: rank=256
+  backbone.layers.20.mixer.out_proj: rank=256
+  backbone.layers.21.mixer.in_proj: rank=256
+  backbone.layers.21.mixer.x_proj: rank=256
+  backbone.layers.21.mixer.dt_proj: rank=256
+  backbone.layers.21.mixer.out_proj: rank=256
+  backbone.layers.22.mixer.in_proj: rank=256
+  backbone.layers.22.mixer.x_proj: rank=256
+  backbone.layers.22.mixer.dt_proj: rank=256
+  backbone.layers.22.mixer.out_proj: rank=256
+  backbone.layers.23.mixer.in_proj: rank=256
+  backbone.layers.23.mixer.x_proj: rank=256
+  backbone.layers.23.mixer.dt_proj: rank=256
+  backbone.layers.23.mixer.out_proj: rank=256
+
+  Overall compression: 2.11x
+  Parameter reduction: 52.6%
+
+  Context length: 128
+    PPL: 4857930.977                                                                                                                                                                                                         
+
+  Context length: 512
+    PPL: 28244071.052                                                                                                                                                                                                        
+
+  Context length: 1024
+    PPL: 40833995.698                                                                                                                                                                                                        
+
+  Context length: 4096
+    PPL: 26736677.229                                                                                                                                                                                                        
+
+============================================================
+Testing Layer Group: non_critical (rank=64)
+============================================================
+Selected 0 layers
+No layers found for this group!
+
+============================================================
+Testing Layer Group: non_critical (rank=128)
+============================================================
+Selected 0 layers
+No layers found for this group!
+
+============================================================
+Testing Layer Group: non_critical (rank=256)
+============================================================
+Selected 0 layers
+No layers found for this group!
+
+============================================================
+PHASE 2: Compression Strategies
+============================================================
+
+============================================================
+Testing Strategy: Strategy_1_Conservative
+============================================================
+Compressing 96 layers
+
+Applying selective low-rank compression...
+Compressing 96 layers
+  backbone.layers.0.mixer.in_proj: rank=256
+  backbone.layers.1.mixer.in_proj: rank=256
+  backbone.layers.2.mixer.in_proj: rank=256
+  backbone.layers.3.mixer.in_proj: rank=256
+  backbone.layers.4.mixer.in_proj: rank=256
+  backbone.layers.5.mixer.in_proj: rank=256
+  backbone.layers.6.mixer.in_proj: rank=256
+  backbone.layers.7.mixer.in_proj: rank=256
+  backbone.layers.8.mixer.in_proj: rank=256
+  backbone.layers.9.mixer.in_proj: rank=256
+  backbone.layers.10.mixer.in_proj: rank=256
+  backbone.layers.11.mixer.in_proj: rank=256
+  backbone.layers.12.mixer.in_proj: rank=256
+  backbone.layers.13.mixer.in_proj: rank=256
+  backbone.layers.14.mixer.in_proj: rank=256
+  backbone.layers.15.mixer.in_proj: rank=256
+  backbone.layers.16.mixer.in_proj: rank=256
+  backbone.layers.17.mixer.in_proj: rank=256
+  backbone.layers.18.mixer.in_proj: rank=256
+  backbone.layers.19.mixer.in_proj: rank=256
+  backbone.layers.20.mixer.in_proj: rank=256
+  backbone.layers.21.mixer.in_proj: rank=256
+  backbone.layers.22.mixer.in_proj: rank=256
+  backbone.layers.23.mixer.in_proj: rank=256
+  backbone.layers.0.mixer.out_proj: rank=256
+  backbone.layers.1.mixer.out_proj: rank=256
+  backbone.layers.2.mixer.out_proj: rank=256
+  backbone.layers.3.mixer.out_proj: rank=256
+  backbone.layers.4.mixer.out_proj: rank=256
+  backbone.layers.5.mixer.out_proj: rank=256
+  backbone.layers.6.mixer.out_proj: rank=256
+  backbone.layers.7.mixer.out_proj: rank=256
+  backbone.layers.8.mixer.out_proj: rank=256
+  backbone.layers.9.mixer.out_proj: rank=256
+  backbone.layers.10.mixer.out_proj: rank=256
+  backbone.layers.11.mixer.out_proj: rank=256
+  backbone.layers.12.mixer.out_proj: rank=256
+  backbone.layers.13.mixer.out_proj: rank=256
+  backbone.layers.14.mixer.out_proj: rank=256
+  backbone.layers.15.mixer.out_proj: rank=256
+  backbone.layers.16.mixer.out_proj: rank=256
+  backbone.layers.17.mixer.out_proj: rank=256
+  backbone.layers.18.mixer.out_proj: rank=256
+  backbone.layers.19.mixer.out_proj: rank=256
+  backbone.layers.20.mixer.out_proj: rank=256
+  backbone.layers.21.mixer.out_proj: rank=256
+  backbone.layers.22.mixer.out_proj: rank=256
+  backbone.layers.23.mixer.out_proj: rank=256
+  backbone.layers.0.mixer.x_proj: rank=128
+  backbone.layers.1.mixer.x_proj: rank=128
+  backbone.layers.2.mixer.x_proj: rank=128
+  backbone.layers.3.mixer.x_proj: rank=128
+  backbone.layers.4.mixer.x_proj: rank=128
+  backbone.layers.5.mixer.x_proj: rank=128
+  backbone.layers.6.mixer.x_proj: rank=128
+  backbone.layers.7.mixer.x_proj: rank=128
+  backbone.layers.8.mixer.x_proj: rank=128
+  backbone.layers.9.mixer.x_proj: rank=128
+  backbone.layers.10.mixer.x_proj: rank=128
+  backbone.layers.11.mixer.x_proj: rank=128
+  backbone.layers.12.mixer.x_proj: rank=128
+  backbone.layers.13.mixer.x_proj: rank=128
+  backbone.layers.14.mixer.x_proj: rank=128
+  backbone.layers.15.mixer.x_proj: rank=128
+  backbone.layers.16.mixer.x_proj: rank=128
+  backbone.layers.17.mixer.x_proj: rank=128
+  backbone.layers.18.mixer.x_proj: rank=128
+  backbone.layers.19.mixer.x_proj: rank=128
+  backbone.layers.20.mixer.x_proj: rank=128
+  backbone.layers.21.mixer.x_proj: rank=128
+  backbone.layers.22.mixer.x_proj: rank=128
+  backbone.layers.23.mixer.x_proj: rank=128
+  backbone.layers.0.mixer.dt_proj: rank=64
+  backbone.layers.1.mixer.dt_proj: rank=64
+  backbone.layers.2.mixer.dt_proj: rank=64
+  backbone.layers.3.mixer.dt_proj: rank=64
+  backbone.layers.4.mixer.dt_proj: rank=64
+  backbone.layers.5.mixer.dt_proj: rank=64
+  backbone.layers.6.mixer.dt_proj: rank=64
+  backbone.layers.7.mixer.dt_proj: rank=64
+  backbone.layers.8.mixer.dt_proj: rank=64
+  backbone.layers.9.mixer.dt_proj: rank=64
+  backbone.layers.10.mixer.dt_proj: rank=64
+  backbone.layers.11.mixer.dt_proj: rank=64
+  backbone.layers.12.mixer.dt_proj: rank=64
+  backbone.layers.13.mixer.dt_proj: rank=64
+  backbone.layers.14.mixer.dt_proj: rank=64
+  backbone.layers.15.mixer.dt_proj: rank=64
+  backbone.layers.16.mixer.dt_proj: rank=64
+  backbone.layers.17.mixer.dt_proj: rank=64
+  backbone.layers.18.mixer.dt_proj: rank=64
+  backbone.layers.19.mixer.dt_proj: rank=64
+  backbone.layers.20.mixer.dt_proj: rank=64
+  backbone.layers.21.mixer.dt_proj: rank=64
+  backbone.layers.22.mixer.dt_proj: rank=64
+  backbone.layers.23.mixer.dt_proj: rank=64
+
+  Overall compression: 2.11x
+  Parameter reduction: 52.6%
+
+  Context length: 128
+    PPL: 4857930.977                                                                                                                                                                                                         
+
+  Context length: 512
+    PPL: 28244071.052                                                                                                                                                                                                        
+
+  Context length: 1024
+    PPL: 40833995.698                                                                                                                                                                                                        
+
+  Context length: 4096
+    PPL: 26736677.229                                                                                                                                                                                                        
+
+============================================================
+Testing Strategy: Strategy_2_Aggressive
+============================================================
+Compressing 96 layers
+
+Applying selective low-rank compression...
+Compressing 96 layers
+  backbone.layers.0.mixer.in_proj: rank=128
+  backbone.layers.1.mixer.in_proj: rank=128
+  backbone.layers.2.mixer.in_proj: rank=128
+  backbone.layers.3.mixer.in_proj: rank=128
+  backbone.layers.4.mixer.in_proj: rank=128
+  backbone.layers.5.mixer.in_proj: rank=128
+  backbone.layers.6.mixer.in_proj: rank=128
+  backbone.layers.7.mixer.in_proj: rank=128
+  backbone.layers.8.mixer.in_proj: rank=128
+  backbone.layers.9.mixer.in_proj: rank=128
+  backbone.layers.10.mixer.in_proj: rank=128
+  backbone.layers.11.mixer.in_proj: rank=128
+  backbone.layers.12.mixer.in_proj: rank=128
+  backbone.layers.13.mixer.in_proj: rank=128
+  backbone.layers.14.mixer.in_proj: rank=128
+  backbone.layers.15.mixer.in_proj: rank=128
+  backbone.layers.16.mixer.in_proj: rank=128
+  backbone.layers.17.mixer.in_proj: rank=128
+  backbone.layers.18.mixer.in_proj: rank=128
+  backbone.layers.19.mixer.in_proj: rank=128
+  backbone.layers.20.mixer.in_proj: rank=128
+  backbone.layers.21.mixer.in_proj: rank=128
+  backbone.layers.22.mixer.in_proj: rank=128
+  backbone.layers.23.mixer.in_proj: rank=128
+  backbone.layers.0.mixer.out_proj: rank=128
+  backbone.layers.1.mixer.out_proj: rank=128
+  backbone.layers.2.mixer.out_proj: rank=128
+  backbone.layers.3.mixer.out_proj: rank=128
+  backbone.layers.4.mixer.out_proj: rank=128
+  backbone.layers.5.mixer.out_proj: rank=128
+  backbone.layers.6.mixer.out_proj: rank=128
+  backbone.layers.7.mixer.out_proj: rank=128
+  backbone.layers.8.mixer.out_proj: rank=128
+  backbone.layers.9.mixer.out_proj: rank=128
+  backbone.layers.10.mixer.out_proj: rank=128
+  backbone.layers.11.mixer.out_proj: rank=128
+  backbone.layers.12.mixer.out_proj: rank=128
+  backbone.layers.13.mixer.out_proj: rank=128
+  backbone.layers.14.mixer.out_proj: rank=128
+  backbone.layers.15.mixer.out_proj: rank=128
+  backbone.layers.16.mixer.out_proj: rank=128
+  backbone.layers.17.mixer.out_proj: rank=128
+  backbone.layers.18.mixer.out_proj: rank=128
+  backbone.layers.19.mixer.out_proj: rank=128
+  backbone.layers.20.mixer.out_proj: rank=128
+  backbone.layers.21.mixer.out_proj: rank=128
+  backbone.layers.22.mixer.out_proj: rank=128
+  backbone.layers.23.mixer.out_proj: rank=128
+  backbone.layers.0.mixer.x_proj: rank=64
+  backbone.layers.1.mixer.x_proj: rank=64
+  backbone.layers.2.mixer.x_proj: rank=64
+  backbone.layers.3.mixer.x_proj: rank=64
+  backbone.layers.4.mixer.x_proj: rank=64
+  backbone.layers.5.mixer.x_proj: rank=64
+  backbone.layers.6.mixer.x_proj: rank=64
+  backbone.layers.7.mixer.x_proj: rank=64
+  backbone.layers.8.mixer.x_proj: rank=64
+  backbone.layers.9.mixer.x_proj: rank=64
+  backbone.layers.10.mixer.x_proj: rank=64
+  backbone.layers.11.mixer.x_proj: rank=64
+  backbone.layers.12.mixer.x_proj: rank=64
+  backbone.layers.13.mixer.x_proj: rank=64
+  backbone.layers.14.mixer.x_proj: rank=64
+  backbone.layers.15.mixer.x_proj: rank=64
+  backbone.layers.16.mixer.x_proj: rank=64
+  backbone.layers.17.mixer.x_proj: rank=64
+  backbone.layers.18.mixer.x_proj: rank=64
+  backbone.layers.19.mixer.x_proj: rank=64
+  backbone.layers.20.mixer.x_proj: rank=64
+  backbone.layers.21.mixer.x_proj: rank=64
+  backbone.layers.22.mixer.x_proj: rank=64
+  backbone.layers.23.mixer.x_proj: rank=64
+  backbone.layers.0.mixer.dt_proj: rank=32
+  backbone.layers.1.mixer.dt_proj: rank=32
+  backbone.layers.2.mixer.dt_proj: rank=32
+  backbone.layers.3.mixer.dt_proj: rank=32
+  backbone.layers.4.mixer.dt_proj: rank=32
+  backbone.layers.5.mixer.dt_proj: rank=32
+  backbone.layers.6.mixer.dt_proj: rank=32
+  backbone.layers.7.mixer.dt_proj: rank=32
+  backbone.layers.8.mixer.dt_proj: rank=32
+  backbone.layers.9.mixer.dt_proj: rank=32
+  backbone.layers.10.mixer.dt_proj: rank=32
+  backbone.layers.11.mixer.dt_proj: rank=32
+  backbone.layers.12.mixer.dt_proj: rank=32
+  backbone.layers.13.mixer.dt_proj: rank=32
+  backbone.layers.14.mixer.dt_proj: rank=32
+  backbone.layers.15.mixer.dt_proj: rank=32
+  backbone.layers.16.mixer.dt_proj: rank=32
+  backbone.layers.17.mixer.dt_proj: rank=32
+  backbone.layers.18.mixer.dt_proj: rank=32
+  backbone.layers.19.mixer.dt_proj: rank=32
+  backbone.layers.20.mixer.dt_proj: rank=32
+  backbone.layers.21.mixer.dt_proj: rank=32
+  backbone.layers.22.mixer.dt_proj: rank=32
+  backbone.layers.23.mixer.dt_proj: rank=32
+
+  Overall compression: 3.97x
+  Parameter reduction: 74.8%
+
+  Context length: 128
+    PPL: 86644921.932                                                                                                                                                                                                        
+
+  Context length: 512
+    PPL: 36551061.672                                                                                                                                                                                                        
+
+  Context length: 1024
+    PPL: 85152991.644                                                                                                                                                                                                        
+
+  Context length: 4096
+    PPL: 53984360453.826                                                                                                                                                                                                     
+
+============================================================
+Testing Strategy: Strategy_3_Uniform
+============================================================
+Compressing 97 layers
+
+Applying selective low-rank compression...
+Compressing 97 layers
+  backbone.layers.0.mixer.in_proj: rank=64
+  backbone.layers.0.mixer.x_proj: rank=64
+  backbone.layers.0.mixer.dt_proj: rank=64
+  backbone.layers.0.mixer.out_proj: rank=64
+  backbone.layers.1.mixer.in_proj: rank=64
+  backbone.layers.1.mixer.x_proj: rank=64
+  backbone.layers.1.mixer.dt_proj: rank=64
+  backbone.layers.1.mixer.out_proj: rank=64
+  backbone.layers.2.mixer.in_proj: rank=64
+  backbone.layers.2.mixer.x_proj: rank=64
+  backbone.layers.2.mixer.dt_proj: rank=64
+  backbone.layers.2.mixer.out_proj: rank=64
+  backbone.layers.3.mixer.in_proj: rank=64
+  backbone.layers.3.mixer.x_proj: rank=64
+  backbone.layers.3.mixer.dt_proj: rank=64
+  backbone.layers.3.mixer.out_proj: rank=64
+  backbone.layers.4.mixer.in_proj: rank=64
+  backbone.layers.4.mixer.x_proj: rank=64
+  backbone.layers.4.mixer.dt_proj: rank=64
+  backbone.layers.4.mixer.out_proj: rank=64
+  backbone.layers.5.mixer.in_proj: rank=64
+  backbone.layers.5.mixer.x_proj: rank=64
+  backbone.layers.5.mixer.dt_proj: rank=64
+  backbone.layers.5.mixer.out_proj: rank=64
+  backbone.layers.6.mixer.in_proj: rank=64
+  backbone.layers.6.mixer.x_proj: rank=64
+  backbone.layers.6.mixer.dt_proj: rank=64
+  backbone.layers.6.mixer.out_proj: rank=64
+  backbone.layers.7.mixer.in_proj: rank=64
+  backbone.layers.7.mixer.x_proj: rank=64
+  backbone.layers.7.mixer.dt_proj: rank=64
+  backbone.layers.7.mixer.out_proj: rank=64
+  backbone.layers.8.mixer.in_proj: rank=64
+  backbone.layers.8.mixer.x_proj: rank=64
+  backbone.layers.8.mixer.dt_proj: rank=64
+  backbone.layers.8.mixer.out_proj: rank=64
+  backbone.layers.9.mixer.in_proj: rank=64
+  backbone.layers.9.mixer.x_proj: rank=64
+  backbone.layers.9.mixer.dt_proj: rank=64
+  backbone.layers.9.mixer.out_proj: rank=64
+  backbone.layers.10.mixer.in_proj: rank=64
+  backbone.layers.10.mixer.x_proj: rank=64
+  backbone.layers.10.mixer.dt_proj: rank=64
+  backbone.layers.10.mixer.out_proj: rank=64
+  backbone.layers.11.mixer.in_proj: rank=64
+  backbone.layers.11.mixer.x_proj: rank=64
+  backbone.layers.11.mixer.dt_proj: rank=64
+  backbone.layers.11.mixer.out_proj: rank=64
+  backbone.layers.12.mixer.in_proj: rank=64
+  backbone.layers.12.mixer.x_proj: rank=64
+  backbone.layers.12.mixer.dt_proj: rank=64
+  backbone.layers.12.mixer.out_proj: rank=64
+  backbone.layers.13.mixer.in_proj: rank=64
+  backbone.layers.13.mixer.x_proj: rank=64
+  backbone.layers.13.mixer.dt_proj: rank=64
+  backbone.layers.13.mixer.out_proj: rank=64
+  backbone.layers.14.mixer.in_proj: rank=64
+  backbone.layers.14.mixer.x_proj: rank=64
+  backbone.layers.14.mixer.dt_proj: rank=64
+  backbone.layers.14.mixer.out_proj: rank=64
+  backbone.layers.15.mixer.in_proj: rank=64
+  backbone.layers.15.mixer.x_proj: rank=64
+  backbone.layers.15.mixer.dt_proj: rank=64
+  backbone.layers.15.mixer.out_proj: rank=64
+  backbone.layers.16.mixer.in_proj: rank=64
+  backbone.layers.16.mixer.x_proj: rank=64
+  backbone.layers.16.mixer.dt_proj: rank=64
+  backbone.layers.16.mixer.out_proj: rank=64
+  backbone.layers.17.mixer.in_proj: rank=64
+  backbone.layers.17.mixer.x_proj: rank=64
+  backbone.layers.17.mixer.dt_proj: rank=64
+  backbone.layers.17.mixer.out_proj: rank=64
+  backbone.layers.18.mixer.in_proj: rank=64
+  backbone.layers.18.mixer.x_proj: rank=64
+  backbone.layers.18.mixer.dt_proj: rank=64
+  backbone.layers.18.mixer.out_proj: rank=64
+  backbone.layers.19.mixer.in_proj: rank=64
+  backbone.layers.19.mixer.x_proj: rank=64
+  backbone.layers.19.mixer.dt_proj: rank=64
+  backbone.layers.19.mixer.out_proj: rank=64
+  backbone.layers.20.mixer.in_proj: rank=64
+  backbone.layers.20.mixer.x_proj: rank=64
+  backbone.layers.20.mixer.dt_proj: rank=64
+  backbone.layers.20.mixer.out_proj: rank=64
+  backbone.layers.21.mixer.in_proj: rank=64
+  backbone.layers.21.mixer.x_proj: rank=64
+  backbone.layers.21.mixer.dt_proj: rank=64
+  backbone.layers.21.mixer.out_proj: rank=64
+  backbone.layers.22.mixer.in_proj: rank=64
+  backbone.layers.22.mixer.x_proj: rank=64
+  backbone.layers.22.mixer.dt_proj: rank=64
+  backbone.layers.22.mixer.out_proj: rank=64
+  backbone.layers.23.mixer.in_proj: rank=64
+  backbone.layers.23.mixer.x_proj: rank=64
+  backbone.layers.23.mixer.dt_proj: rank=64
+  backbone.layers.23.mixer.out_proj: rank=64
+  lm_head: rank=64
+
+  Overall compression: 7.56x
+  Parameter reduction: 86.8%
+
+  Context length: 128
+    PPL: 7620768.295                                                                                                                                                                                                         
+
+  Context length: 512
+    PPL: 3221523.163                                                                                                                                                                                                         
+
+  Context length: 1024
+    PPL: 2827271.887                                                                                                                                                                                                         
+
+  Context length: 4096
+    PPL: 1696003.392                                                                                                                                                                                                         
+
+============================================================
+Results saved to mamba_flexible_profiling_results.csv
+============================================================
+
+Summary by Layer Group:
+               perplexity                            num_layers_compressed
+                     mean           std          min                 first
+layer_group                                                               
+Original     3.029900e+01  1.100300e+01       20.471                     0
+all_proj     2.317307e+08  6.062808e+08  4857930.977                    96
+dt_proj      3.029900e+01  9.953000e+00       20.471                    24
+in_proj      4.485297e+12  1.522421e+13     5063.772                    24
+out_proj     2.538288e+05  4.500907e+05    20136.911                    24
+x_proj       2.126420e+02  2.706000e+02       20.471                    24
+
+Best configurations (lowest PPL increase):
+   layer_group rank  context_length  perplexity  ppl_increase
+3     Original  N/A            4096   20.470786     -9.828356
+35      x_proj  128            4096   20.470786     -9.828356
+39      x_proj  256            4096   20.470786     -9.828356
+43     dt_proj   64            4096   20.470786     -9.828356
+47     dt_proj  128            4096   20.470786     -9.828356
+51     dt_proj  256            4096   20.470786     -9.828356
+2     Original  N/A            1024   25.772745     -4.526397
+34      x_proj  128            1024   25.772745     -4.526397
+38      x_proj  256            1024   25.772745     -4.526397
+42     dt_proj   64            1024   25.772745     -4.526397
