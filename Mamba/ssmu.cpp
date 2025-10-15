@@ -3,7 +3,6 @@ void projection(DTYPE_VEC in[VEC_D], DTYPE_VEC weight[N][VEC_D], DTYPE_VEC out[N
     projection_loop: for(int i = 0; i < N; i++) {
         #pragma HLS PIPELINE II=1
         DTYPE sum[VEC_FACTOR] = {0};
-        
         dot_product: for(int j = 0; j < VEC_D; j++) {
             #pragma HLS UNROLL
             for(int k = 0; k < VEC_FACTOR; k++) {
@@ -126,21 +125,17 @@ void EMU_2D(DTYPE_VEC A[N][VEC_D], DTYPE_VEC B[VEC_D], DTYPE_VEC out[N][VEC_D]) 
 // }
 
 void UpdateH_producer(
-    DTYPE_VEC ddA[N][VEC_D], DTYPE_VEC dX[VEC_D], DTYPE_VEC dB[N][VEC_D], DTYPE_VEC C[N]
-    , DTYPE_VEC H0[N][VEC_D],
+    DTYPE_VEC ddA[N][VEC_D], DTYPE_VEC dX[VEC_D], DTYPE_VEC dB[N][VEC_D],
+     DTYPE_VEC H0[N][VEC_D],
     hls::stream<DTYPE_VEC> &stream_ddA,
     hls::stream<DTYPE_VEC> &stream_dX,
     hls::stream<DTYPE_VEC> &stream_dB,
-    hls::stream<DTYPE_VEC> &stream_C,
     hls::stream<DTYPE_VEC> &stream_H0_in) {
-    
+    #pragma HLS DATAFLOW
+    #pragma HLS INLINE OFF
     write_const_streams: for(int j = 0; j < VEC_D; j++) {
         #pragma HLS PIPELINE II=1
         stream_dX.write(dX[j]); 
-    }
-    write_dC_stream: for(int i = 0; i < N; i++) {
-        #pragma HLS PIPELINE II=1
-        stream_C.write(C[i]);
     }
     write_H0_stream: for(int i = 0; i < N; i++) {
         for(int j = 0; j < VEC_D; j++) {
@@ -156,21 +151,16 @@ void UpdateH_consumer(
     hls::stream<DTYPE_VEC> &stream_ddA,
     hls::stream<DTYPE_VEC> &stream_X_ssm,
     hls::stream<DTYPE_VEC> &stream_dB,
-    hls::stream<DTYPE_VEC> &stream_C,
     hls::stream<DTYPE_VEC> &stream_H0_in,
     DTYPE_VEC H1[N][VEC_D]) {
-
+    #pragma HLS DATAFLOW
+    #pragma HLS INLINE OFF
     DTYPE_VEC dX_val[VEC_D];
     read_ddX: for(int j = 0; j < VEC_D; j++) {
         #pragma HLS PIPELINE II=1
         dX_val[j] = stream_X_ssm.read();
     }
 
-    DTYPE_VEC C_val[N];
-    read_dC: for(int i = 0; i < N; i++) {
-        #pragma HLS PIPELINE II=1
-        C_val[i] = stream_C.read();
-    }
 
     process_timesteps: for(int i = 0; i < N; i++) {
         #pragma HLS PIPELINE II=1
@@ -180,7 +170,6 @@ void UpdateH_consumer(
             #pragma HLS PIPELINE II=1
             H0_current[j] = stream_H0_in.read();
         }
-        
             
         process_elements: for(int j = 0; j < VEC_D; j++) {
             #pragma HLS PIPELINE II=1
@@ -247,6 +236,9 @@ void SSMU(
     //intermediate register  
     DTYPE_VEC delta[VEC_D], dA[N][VEC_D], B[N], C[N], dX[VEC_D];
     DTYPE_VEC ddA[N][VEC_D], X_ssm[VEC_D], dB[N][VEC_D], X_gate[VEC_D];
+
+
+    
     //linear X
     conv1d_vec(X, kernel_buffer, dX);
     silu(dX, X_ssm);
@@ -273,12 +265,11 @@ void SSMU(
         }
     }
 
-    #pragma HLS DATAFLOW
     
-UpdateH_producer(ddA, X_ssm, dB, C, H0, 
-                     stream_ddA, stream_dX, stream_dB, stream_C, stream_H0_in);
+UpdateH_producer(ddA, X_ssm, dB, H0, 
+                     stream_ddA, stream_dX, stream_dB, stream_H0_in);
     
-UpdateH_consumer(stream_ddA, stream_dX, stream_dB, stream_C, stream_H0_in,
+UpdateH_consumer(stream_ddA, stream_dX, stream_dB, stream_H0_in,
                      H1);
     init_out: for(int j = 0; j < VEC_D; j++) {
         #pragma HLS PIPELINE II=1
