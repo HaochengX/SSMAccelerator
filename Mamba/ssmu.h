@@ -8,8 +8,8 @@
 #include <hls_vector.h>
 // DTYPE can be integer or fixed point
 //typedef ap_fixed<8, 3> DTYPE;
-typedef ap_int<8> DTYPE;
-//typedef float DTYPE;
+//typedef ap_int<8> DTYPE;
+typedef float DTYPE;
 constexpr int VEC_FACTOR = 16;
 typedef hls::vector<DTYPE,VEC_FACTOR> DTYPE_VEC;
 
