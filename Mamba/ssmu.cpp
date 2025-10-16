@@ -277,12 +277,22 @@ UpdateH_consumer(stream_ddA, stream_dX, stream_dB, stream_H0_in,
     }
     
     // H1(Dim,N) * dC(N)
+    DTYPE_VEC temp_acc[VEC_D];
+    #pragma HLS ARRAY_PARTITION variable=temp_acc complete
+    
+    init_acc: for(int j = 0; j < VEC_D; j++) {
+        #pragma HLS UNROLL
+        temp_acc[j] = 0;
+    }
     compute_h1_dC: for(int i = 0; i < N; i++) {
         #pragma HLS PIPELINE II=1
-        accumulate_loop: for(int j = 0; j < VEC_D; j++) {
+        for(int j = 0; j < VEC_D; j++) {
             #pragma HLS UNROLL
-            DTYPE_VEC h1_C = H1[i][j] * C[i];
-            out[j] = out[j] + h1_C;
+            temp_acc[j] += H1[i][j] * C[i];
         }
+    }
+    output: for(int j = 0; j < VEC_D; j++) {
+        #pragma HLS PIPELINE
+        out[j] = X_gate[j] + temp_acc[j];
     }
 }
