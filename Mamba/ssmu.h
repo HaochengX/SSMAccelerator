@@ -6,7 +6,6 @@
 #include <hls_stream.h>
 #include <hls_math.h>
 #include <hls_vector.h>
-
 // DTYPE can be integer or fixed point
 //typedef ap_fixed<8, 3> DTYPE;
 //typedef ap_int<8> DTYPE;
