@@ -150,13 +150,7 @@ void projection_streams(hls::stream<DTYPE_VEC>& X_ssm_in,
         apply_softplus: for(int k = 0; k < VEC_FACTOR; k++) {
             #pragma HLS UNROLL
             DTYPE val =out_vec_delta[k];
-            if (val > 20.0f) 
-                out_vec_delta[k] = val;
-            else if (val < -20.0f)
-                out_vec_delta[k] = 0.0f;
-            else
-                out_vec_delta[k] = hls::log(1.0f + hls::exp(val));
-            // out_vec_delta[k] = (DTYPE)hls::log((DTYPE)1.0 + hls::exp(val));
+            out_vec_delta[k] = (DTYPE)hls::log((DTYPE)1.0 + hls::exp(val));
         }
         delta_out.write(out_vec_delta);
     }
@@ -191,13 +185,7 @@ void A_to_ddA_stream(hls::stream<DTYPE_VEC>& A_in, hls::stream<DTYPE_VEC>& delta
             for(int k = 0; k < VEC_FACTOR; k++) {
                 #pragma HLS UNROLL
                 DTYPE dA_val = dA_vec[k];
-                if (dA_val > 20.0f)
-                    ddA_vec[k] = 485165195.4097903f; // exp(20)
-                else if (dA_val < -20.0f) 
-                    ddA_vec[k] = 0.0f;
-                else
-                    ddA_vec[k] = hls::exp(dA_val);
-                // ddA_vec[k] = (DTYPE)hls::exp(dA_vec[k]);
+                ddA_vec[k] = (DTYPE)hls::exp(dA_vec[k]);
             }
             ddA_out.write(ddA_vec);
         }
