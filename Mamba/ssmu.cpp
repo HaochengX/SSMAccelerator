@@ -3,14 +3,21 @@
 // ==================== Part 1: X to X_gate, B, C, delta ====================
 
 // Optimized conv1d and silu with streams
-void conv1d_silu_stream(hls::stream<DTYPE_VEC>& X_in, DTYPE kernel[K], 
+void conv1d_silu_stream(hls::stream<DTYPE_VEC>& X_in, hls::stream<DTYPE>& kernel_in, 
                         hls::stream<DTYPE_VEC>& X_gate_out, hls::stream<DTYPE_VEC>& X_ssm_out) {
     #pragma HLS INLINE OFF
     
     static DTYPE shift_reg[K + VEC_FACTOR - 1];
     #pragma HLS ARRAY_PARTITION variable=shift_reg complete
-    
+
+    DTYPE kernel_buffer[K];
+    #pragma HLS ARRAY_PARTITION variable=kernel_buffer complete
+    read_kernel: for(int i = 0; i < K; i++) {
+        #pragma HLS PIPELINE II=1
+        kernel_buffer[i] = kernel_in.read();
+    }
     DTYPE_VEC X_buffer[VEC_D];
+    #pragma HLS ARRAY_PARTITION variable=X_buffer complete
     
     // Read and buffer X for X_gate
     read_X: for(int i = 0; i < VEC_D; i++) {
@@ -60,7 +67,7 @@ void conv1d_silu_stream(hls::stream<DTYPE_VEC>& X_in, DTYPE kernel[K],
             DTYPE sum = 0;
             conv_calc: for(int k = 0; k < K; k++) {
                 #pragma HLS UNROLL
-                sum += kernel[k] * shift_reg[j + k];
+                sum += kernel_buffer[k] * shift_reg[j + k];
             }
             output_vec[j] = sum;
         }
@@ -150,7 +157,8 @@ void projection_streams(hls::stream<DTYPE_VEC>& X_ssm_in,
         apply_softplus: for(int k = 0; k < VEC_FACTOR; k++) {
             #pragma HLS UNROLL
             DTYPE val =out_vec_delta[k];
-            out_vec_delta[k] = (DTYPE)hls::log((DTYPE)1.0 + hls::exp(val));
+
+           out_vec_delta[k] = (DTYPE)hls::log((DTYPE)1.0 + hls::exp(val));
         }
         delta_out.write(out_vec_delta);
     }
@@ -185,7 +193,8 @@ void A_to_ddA_stream(hls::stream<DTYPE_VEC>& A_in, hls::stream<DTYPE_VEC>& delta
             for(int k = 0; k < VEC_FACTOR; k++) {
                 #pragma HLS UNROLL
                 DTYPE dA_val = dA_vec[k];
-                ddA_vec[k] = (DTYPE)hls::exp(dA_vec[k]);
+
+                 ddA_vec[k] = (DTYPE)hls::exp(dA_vec[k]);
             }
             ddA_out.write(ddA_vec);
         }
@@ -301,7 +310,7 @@ void final_output_stream(hls::stream<DTYPE_VEC>& X_gate_in, hls::stream<DTYPE_VE
 // ==================== Complete Stream-based SSMU ====================
 
 void SSMU_stream_complete(
-    DTYPE kernel[K],
+    hls::stream<DTYPE>& kernel_in,
     hls::stream<DTYPE_VEC>& A_in,
     DTYPE_VEC W_B[N][VEC_D], DTYPE_VEC W_C[N][VEC_D], DTYPE_VEC W_delta[VEC_D][VEC_D],
     hls::stream<DTYPE_VEC>& X_in,
@@ -322,33 +331,25 @@ void SSMU_stream_complete(
     hls::stream<DTYPE_VEC> ddA_stream("ddA_stream");
     hls::stream<DTYPE_VEC> dB_stream("dB_stream");
     hls::stream<DTYPE_VEC> H1_temp_stream("H1_temp_stream");
-    
-    #pragma HLS STREAM variable=X_gate_stream depth=128
-    #pragma HLS STREAM variable=X_ssm_stream depth=128
-    #pragma HLS STREAM variable=B_stream depth=128
-    #pragma HLS STREAM variable=C_stream depth=128
-    #pragma HLS STREAM variable=delta_stream depth=128
-    #pragma HLS STREAM variable=delta_stream2 depth=128
-    #pragma HLS STREAM variable=delta_stream3 depth=128
-    #pragma HLS STREAM variable=ddA_stream depth=128
-    #pragma HLS STREAM variable=dB_stream depth=128
-    #pragma HLS STREAM variable=H1_temp_stream depth=128
+    //depth can be 2, 
 
-DTYPE kernel_buffer[K];
-    #pragma HLS ARRAY_PARTITION variable=kernel_buffer complete
-
-    // 加载kernel
-    load_kernel: for (int i = 0; i < K; i++) {
-        #pragma HLS PIPELINE II=1
-        kernel_buffer[i] = kernel[i];
-    }
+    #pragma HLS STREAM variable=X_gate_stream depth=2
+    #pragma HLS STREAM variable=X_ssm_stream depth=2
+    #pragma HLS STREAM variable=B_stream depth=2
+    #pragma HLS STREAM variable=C_stream depth=2
+    #pragma HLS STREAM variable=delta_stream depth=2
+    #pragma HLS STREAM variable=delta_stream2 depth=2
+    #pragma HLS STREAM variable=delta_stream3 depth=2
+    #pragma HLS STREAM variable=ddA_stream depth=2
+    #pragma HLS STREAM variable=dB_stream depth=2
+    #pragma HLS STREAM variable=H1_temp_stream depth=2
     
     // Part 1: X to X_gate, B, C, delta
-    conv1d_silu_stream(X_in, kernel_buffer, X_gate_stream, X_ssm_stream);
+    conv1d_silu_stream(X_in, kernel_in, X_gate_stream, X_ssm_stream);
     
     // Split X_ssm for multiple consumers
     hls::stream<DTYPE_VEC> X_ssm_delta("X_ssm_delta");
-    #pragma HLS STREAM variable=X_ssm_delta depth=128
+    #pragma HLS STREAM variable=X_ssm_delta depth=2
     
     duplicate_X_ssm: for(int i = 0; i < VEC_D; i++) {
         #pragma HLS PIPELINE II=1
@@ -379,7 +380,7 @@ DTYPE kernel_buffer[K];
     // We'll create a separate path for this
     
     hls::stream<DTYPE_VEC> H1_for_final("H1_for_final");
-    #pragma HLS STREAM variable=H1_for_final depth=128
+    #pragma HLS STREAM variable=H1_for_final depth=2
     copy_H1_for_final: for(int i = 0; i < N * VEC_D; i++) {
         #pragma HLS PIPELINE II=1
         DTYPE_VEC H1_val = H1_temp_stream.read();
@@ -404,12 +405,14 @@ void SSMU(
     #pragma HLS DATAFLOW
     
     // Convert arrays to streams
+    hls::stream<DTYPE> kernel_stream;
     hls::stream<DTYPE_VEC> A_stream, X_stream, H0_stream, H1_stream, out_stream;
-    #pragma HLS STREAM variable=A_stream depth=64
-    #pragma HLS STREAM variable=X_stream depth=64
-    #pragma HLS STREAM variable=H0_stream depth=64
-    #pragma HLS STREAM variable=H1_stream depth=64
-    #pragma HLS STREAM variable=out_stream depth=64
+    #pragma HLS STREAM variable=kernel_stream depth=2
+    #pragma HLS STREAM variable=A_stream depth=2
+    #pragma HLS STREAM variable=X_stream depth=2
+    #pragma HLS STREAM variable=H0_stream depth=2
+    #pragma HLS STREAM variable=H1_stream depth=2
+    #pragma HLS STREAM variable=out_stream depth=2
     
     // Write input arrays to streams
     write_A: for(int i = 0; i < N; i++) {
@@ -418,7 +421,11 @@ void SSMU(
             A_stream.write(A[i][j]);
         }
     }
-    
+    load_kernel: for (int i = 0; i < K; i++) {
+        #pragma HLS PIPELINE II=1
+        kernel_stream.write(kernel[i]);
+    }
+
     write_X: for(int i = 0; i < VEC_D; i++) {
         #pragma HLS PIPELINE II=1
         X_stream.write(X[i]);
@@ -432,7 +439,7 @@ void SSMU(
     }
     
     // Call stream-optimized version
-    SSMU_stream_complete(kernel, A_stream, W_B, W_C, W_delta, X_stream, H0_stream, H1_stream, out_stream);
+    SSMU_stream_complete(kernel_stream, A_stream, W_B, W_C, W_delta, X_stream, H0_stream, H1_stream, out_stream);
     
     // Read outputs from streams
     read_H1: for(int i = 0; i < N; i++) {
