@@ -183,7 +183,6 @@ void A_to_ddA_stream(hls::stream<DTYPE_VEC>& A_in, hls::stream<DTYPE_VEC>& delta
         DTYPE_VEC A_val = A_in.read();
         
         for(int j = 0; j < VEC_D; j++) {
-            #pragma HLS UNROLL
             DTYPE_VEC delta_val = delta_buffer[j];
             //  dA = A * delta
             DTYPE_VEC dA_vec = A_val * delta_val;
@@ -191,7 +190,6 @@ void A_to_ddA_stream(hls::stream<DTYPE_VEC>& A_in, hls::stream<DTYPE_VEC>& delta
             //  ddA = exp(dA)
             DTYPE_VEC ddA_vec;
             for(int k = 0; k < VEC_FACTOR; k++) {
-                #pragma HLS UNROLL
                 DTYPE dA_val = dA_vec[k];
 
                  ddA_vec[k] = (DTYPE)hls::exp(dA_vec[k]);
@@ -221,7 +219,6 @@ void B_to_dB_stream(hls::stream<DTYPE_VEC>& B_in, hls::stream<DTYPE_VEC>& delta_
         DTYPE_VEC B_val = B_in.read();
         
         for(int j = 0; j < VEC_D; j++) {
-            #pragma HLS UNROLL
             DTYPE_VEC delta_val = delta_buffer[j];
             DTYPE_VEC dB_vec = B_val * delta_val;
             dB_out.write(dB_vec);
@@ -292,8 +289,9 @@ void final_output_stream(hls::stream<DTYPE_VEC>& X_gate_in, hls::stream<DTYPE_VE
     
     // Accumulate H1 * C
     accumulate_H1_C: for(int i = 0; i < N; i++) {
-        for(int j = 0; j < VEC_D; j++) {
             #pragma HLS PIPELINE II=1
+    DTYPE_VEC C_val = C_buffer[i];
+        for(int j = 0; j < VEC_D; j++) {
             DTYPE_VEC H1_val = H1_in.read();
             temp_acc[j] += H1_val * C_buffer[i];
         }
