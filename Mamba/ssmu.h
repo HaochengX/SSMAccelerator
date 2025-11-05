@@ -16,8 +16,8 @@ typedef hls::vector<DTYPE, VEC_FACTOR> DTYPE_VEC;
 
 #define BATCH 1
 #define LENGTH 64
-#define N 16
-#define Dim 64
+#define N 128
+#define Dim 80
 #define K 4
 #define VEC_D (Dim / VEC_FACTOR)
 
