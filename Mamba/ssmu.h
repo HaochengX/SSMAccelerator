@@ -8,16 +8,16 @@
 #include <hls_vector.h>
 // DTYPE can be integer or fixed point
 //typedef ap_fixed<8, 3> DTYPE;
-//typedef ap_int<8> DTYPE;
-typedef float DTYPE;
+typedef ap_int<8> DTYPE;
+//typedef float DTYPE;
 
-constexpr int VEC_FACTOR = 16;
+constexpr int VEC_FACTOR = 8;
 typedef hls::vector<DTYPE, VEC_FACTOR> DTYPE_VEC;
 
 #define BATCH 1
 #define LENGTH 64
 #define N 128
-#define Dim 80
+#define Dim 2560
 #define K 4
 #define VEC_D (Dim / VEC_FACTOR)
 
@@ -45,23 +45,22 @@ void update_H_stream(hls::stream<DTYPE_VEC>& ddA_in, hls::stream<DTYPE_VEC>& dX_
 void final_output_stream(hls::stream<DTYPE_VEC>& X_gate_in, hls::stream<DTYPE_VEC>& H1_in, 
                          hls::stream<DTYPE_VEC>& C_in, hls::stream<DTYPE_VEC>& out);
 
+void duplicate_X_ssm_stream(hls::stream<DTYPE_VEC>& in, 
+                           hls::stream<DTYPE_VEC>& out1);
+void duplicate_delta_stream(hls::stream<DTYPE_VEC>& in,
+                           hls::stream<DTYPE_VEC>& out1,
+                           hls::stream<DTYPE_VEC>& out2);
+void duplicate_H1_stream(hls::stream<DTYPE_VEC>& in,
+                        hls::stream<DTYPE_VEC>& out1,
+                        hls::stream<DTYPE_VEC>& out2);
 // Complete stream-based SSMU
-void SSMU_stream_complete(
-    DTYPE kernel[K],
+void SSMU(
+    hls::stream<DTYPE>& kernel_in,
     hls::stream<DTYPE_VEC>& A_in,
     DTYPE_VEC W_B[N][VEC_D], DTYPE_VEC W_C[N][VEC_D], DTYPE_VEC W_delta[VEC_D][VEC_D],
     hls::stream<DTYPE_VEC>& X_in,
     hls::stream<DTYPE_VEC>& H0_in,
     hls::stream<DTYPE_VEC>& H1_out,
     hls::stream<DTYPE_VEC>& out);
-
-// Original SSMU function for compatibility
-void SSMU(
-    DTYPE kernel[K],
-    DTYPE_VEC A[N][VEC_D], DTYPE_VEC W_B[N][VEC_D], DTYPE_VEC W_C[N][VEC_D],
-    DTYPE_VEC X[VEC_D],
-    DTYPE_VEC H0[N][VEC_D], DTYPE_VEC H1[N][VEC_D],
-    DTYPE_VEC W_delta[VEC_D][VEC_D],
-    DTYPE_VEC out[VEC_D]);
 
 #endif
