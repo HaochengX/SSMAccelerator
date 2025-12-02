@@ -1,342 +1,372 @@
 #include "ssmu.h"
-#include "lut_optimized.h"
+// #include "lut_optimized.h"
 
+// local floating type for accurate math (change to ap_fixed if desired)
+typedef float FDTYPE;
+
+
+// compute sl = x * sigmoid(x) using float math, return as DTYPE
+static inline DTYPE silu_elem(DTYPE a) {
+    FDTYPE x = (FDTYPE) a;
+    FDTYPE expv = hls::exp(-x);
+    FDTYPE sig = (FDTYPE)1.0 / ((FDTYPE)1.0 + expv);
+    FDTYPE res = x * sig;
+    // cast back to DTYPE (beware saturation if DTYPE is narrow)
+    return (DTYPE) res;
+}
+
+static inline DTYPE exp_elem(DTYPE a) {
+    FDTYPE x = (FDTYPE) a;
+    FDTYPE y = hls::exp(x);
+    return (DTYPE) y;
+}
+
+static inline DTYPE softplus_elem(DTYPE a) {
+    FDTYPE x = (FDTYPE) a;
+    FDTYPE y = hls::log((FDTYPE)1.0 + hls::exp(x));
+    return (DTYPE) y;
+}
 // ==================== Part 1: X to X_gate, B, C, delta ====================
 
 // Optimized conv1d and silu with streams
-void conv1d_silu_stream(hls::stream<DTYPE_VEC>& X_in, hls::stream<DTYPE>& kernel_in, 
+void conv1d_silu_stream(hls::stream<DTYPE_VEC>& X_in, hls::stream<DTYPE>& kernel_in,
                         hls::stream<DTYPE_VEC>& X_gate_out, hls::stream<DTYPE_VEC>& X_ssm_out) {
-    #pragma HLS INLINE OFF
-    
-    static DTYPE shift_reg[K + VEC_FACTOR - 1];
-    #pragma HLS ARRAY_PARTITION variable=shift_reg complete
+    #pragma HLS INLINE off
+
+    // Use line buffer instead of shift register for better BRAM usage
+    static DTYPE line_buffer[K-1][VEC_FACTOR];
+    #pragma HLS ARRAY_PARTITION variable=line_buffer complete dim=2
+    #pragma HLS BIND_STORAGE variable=line_buffer type=ram_s2p impl=bram
 
     DTYPE kernel_buffer[K];
     #pragma HLS ARRAY_PARTITION variable=kernel_buffer complete
-    read_kernel: for(int i = 0; i < K; i++) {
-        #pragma HLS PIPELINE II=1
+    for (int i = 0; i < K; ++i) {
         kernel_buffer[i] = kernel_in.read();
     }
+
     DTYPE_VEC X_buffer[VEC_D];
-    #pragma HLS ARRAY_PARTITION variable=X_buffer cyclic factor=2 dim=1
-    // Read and buffer X for X_gate
-    read_X: for(int i = 0; i < VEC_D; i++) {
-        #pragma HLS PIPELINE II=2
-        DTYPE_VEC x_val = X_in.read();
-        X_buffer[i] = x_val;
-        
-        // Apply SiLU for X_gate
-        // DTYPE_VEC x_gate;
-        // for(int k = 0; k < VEC_FACTOR; k++) {
-        //     #pragma HLS UNROLL
-        //     DTYPE val = x_val[k];
-        //     DTYPE exp_val = hls::exp(-val);
-        //     DTYPE sigmoid = (DTYPE)1.0 / ((DTYPE)1.0 + exp_val);
-        //     x_gate[k] = val * sigmoid;
-        // }
-        // X_gate_out.write(x_gate);
-        X_gate_out.write(lut_silu_vec(x_val));
-    }
-    
-    // Initialize shift register
-    init_shift_reg: for(int i = 0; i < K + VEC_FACTOR - 1; i++) {
-        #pragma HLS UNROLL
-        shift_reg[i] = 0;
-    }
-    
-    // Process convolution for X_ssm
-    process_vectors: for(int i = 0; i < VEC_D; i++) {
-        #pragma HLS PIPELINE II=2
-        
-        DTYPE_VEC input_vec = X_buffer[i];
-        DTYPE_VEC output_vec;
-        
-        // Update shift register
-        update_shift_reg: for(int j = K + VEC_FACTOR - 2; j >= VEC_FACTOR; j--) {
-            #pragma HLS UNROLL
-            shift_reg[j] = shift_reg[j - VEC_FACTOR];
+    #pragma HLS BIND_STORAGE variable=X_buffer type=ram_s2p impl=bram
+
+    // Read X_in and compute X_gate (SiLU)
+    read_and_gate: for (int i = 0; i < VEC_D; ++i) {
+        #pragma HLS PIPELINE II=1
+        DTYPE_VEC xv = X_in.read();
+        X_buffer[i] = xv;
+
+        DTYPE_VEC gate_out;
+        for (int k = 0; k < VEC_FACTOR; ++k) {
+            #pragma HLS UNROLL factor=4
+            gate_out[k] = silu_elem(xv[k]);
         }
-        
-        load_data: for(int j = 0; j < VEC_FACTOR; j++) {
-            #pragma HLS UNROLL
-            shift_reg[j] = input_vec[j];
+        X_gate_out.write(gate_out);
+    }
+
+    // Initialize line buffer
+    for (int i = 0; i < K-1; ++i) {
+        for (int k = 0; k < VEC_FACTOR; ++k) {
+            line_buffer[i][k] = 0;
         }
+    }
+
+    // Convolution with line buffer
+    conv_proc: for (int i = 0; i < VEC_D; ++i) {
+        #pragma HLS PIPELINE II=2
+        DTYPE_VEC in_vec = X_buffer[i];
+        DTYPE window[K][VEC_FACTOR];
+        #pragma HLS ARRAY_PARTITION variable=window complete dim=2
         
-        // Compute convolution output
-        compute_output: for(int j = 0; j < VEC_FACTOR; j++) {
-            #pragma HLS UNROLL
-            DTYPE sum = 0;
-            conv_calc: for(int k = 0; k < K; k++) {
-                #pragma HLS UNROLL
-                sum += kernel_buffer[k] * shift_reg[j + k];
+        // Fill window: previous K-1 vectors from line buffer + current vector
+        for (int j = 0; j < K-1; ++j) {
+            for (int k = 0; k < VEC_FACTOR; ++k) {
+                window[j][k] = line_buffer[j][k];
             }
-            output_vec[j] = sum;
+        }
+        for (int k = 0; k < VEC_FACTOR; ++k) {
+            window[K-1][k] = in_vec[k];
         }
         
-        // Apply SiLU for X_ssm
-        // DTYPE_VEC x_ssm;
-        // for(int k = 0; k < VEC_FACTOR; k++) {
-        //     #pragma HLS UNROLL
-        //     DTYPE val = output_vec[k];
-        //     DTYPE exp_val = hls::exp(-val);
-        //     DTYPE sigmoid = (DTYPE)1.0 / ((DTYPE)1.0 + exp_val);
-        //     x_ssm[k] = val * sigmoid;
-        // }
-        // X_ssm_out.write(x_ssm);
-        X_ssm_out.write(lut_silu_vec(output_vec));
+        // Update line buffer (shift)
+        for (int j = K-2; j > 0; --j) {
+            for (int k = 0; k < VEC_FACTOR; ++k) {
+                line_buffer[j][k] = line_buffer[j-1][k];
+            }
+        }
+        for (int k = 0; k < VEC_FACTOR; ++k) {
+            line_buffer[0][k] = in_vec[k];
+        }
+
+        // Convolution per lane
+        DTYPE_VEC conv_out;
+        for (int lane = 0; lane < VEC_FACTOR; ++lane) {
+            #pragma HLS UNROLL factor=4
+            FDTYPE sum = 0.0f;
+            for (int k = 0; k < K; ++k) {
+                sum += (FDTYPE)kernel_buffer[k] * (FDTYPE)window[k][lane];
+            }
+            conv_out[lane] = (DTYPE) sum;
+        }
+
+        // Apply SiLU
+        DTYPE_VEC ssm_out;
+        for (int k = 0; k < VEC_FACTOR; ++k) {
+            #pragma HLS UNROLL factor=4
+            ssm_out[k] = silu_elem(conv_out[k]);
+        }
+        X_ssm_out.write(ssm_out);
     }
 }
 
 // Optimized projections with streams for B, C, and delta
-void projection_streams(hls::stream<DTYPE_VEC>& X_ssm_in, 
+void projection_streams(hls::stream<DTYPE_VEC>& X_ssm_in,
                         DTYPE_VEC W_B[N][VEC_D], DTYPE_VEC W_C[N][VEC_D], DTYPE_VEC W_delta[VEC_D][VEC_D],
-                        hls::stream<DTYPE_VEC>& B_out, hls::stream<DTYPE_VEC>& C_out, hls::stream<DTYPE_VEC>& delta_out) {
-    
-    #pragma HLS INLINE OFF
-    #pragma HLS ARRAY_PARTITION variable=W_B cyclic factor=2 dim=1
-    #pragma HLS ARRAY_PARTITION variable=W_B complete dim=2
-    #pragma HLS ARRAY_PARTITION variable=W_C cyclic factor=2 dim=1  
-    #pragma HLS ARRAY_PARTITION variable=W_C complete dim=2
-    #pragma HLS ARRAY_PARTITION variable=W_delta cyclic factor=2 dim=1
-    #pragma HLS ARRAY_PARTITION variable=W_delta cyclic factor=2 dim=2
-    
-    DTYPE_VEC X_ssm_buffer[VEC_D];
-    #pragma HLS ARRAY_PARTITION variable=X_ssm_buffer complete
-    
-    read_X_ssm: for(int j = 0; j < VEC_D; j++) {
+                        hls::stream<DTYPE_VEC>& B_out, hls::stream<DTYPE_VEC>& C_out, 
+                        hls::stream<DTYPE_VEC>& delta_out_A, hls::stream<DTYPE_VEC>& delta_out_B) {
+    #pragma HLS INLINE off
+
+    // Avoid partitioning large weight matrices in outer dimensions to allow BRAM implementation.
+    // Only allow lane-level unroll when multiplying vector lanes.
+    // lightly partition local buffer
+    DTYPE_VEC X_buf[VEC_D];
+    #pragma HLS ARRAY_PARTITION variable=X_buf cyclic factor=2
+    #pragma HLS BIND_STORAGE variable=X_buf type=ram_s2p impl=bram
+    // Use BRAM for large weight matrices
+    #pragma HLS BIND_STORAGE variable=W_B type=ram_s2p impl=bram
+    #pragma HLS BIND_STORAGE variable=W_C type=ram_s2p impl=bram
+    #pragma HLS BIND_STORAGE variable=W_delta type=ram_s2p impl=bram
+    // Read X_ssm (VEC_D vectors)
+    for (int j = 0; j < VEC_D; ++j) {
         #pragma HLS PIPELINE II=1
-        X_ssm_buffer[j] = X_ssm_in.read();
+        X_buf[j] = X_ssm_in.read();
     }
+ DTYPE_VEC delta_buf[VEC_D];
+    #pragma HLS BIND_STORAGE variable=delta_buf type=ram_s2p impl=bram
     
-    projection_B: for(int i = 0; i < N; i++) {
+    compute_delta: for (int i = 0; i < VEC_D; ++i) {
         #pragma HLS PIPELINE II=4
-
-        DTYPE_VEC out_vec_B;
-      compute_B: for(int j = 0; j < VEC_D; j++) {
-            #pragma HLS UNROLL factor=2
-            for(int k = 0; k < VEC_FACTOR; k++) {
-                #pragma HLS UNROLL
-                if (j == 0) out_vec_B[k] = 0; 
-                out_vec_B[k] += X_ssm_buffer[j][k] * W_B[i][j][k];
+        DTYPE_VEC acc;
+        for (int l = 0; l < VEC_FACTOR; ++l) acc[l] = 0;
+        
+        for (int j = 0; j < VEC_D; ++j) {
+            DTYPE_VEC xj = X_buf[j];
+            DTYPE_VEC w = W_delta[i][j];
+            for (int l = 0; l < VEC_FACTOR; ++l) {
+                #pragma HLS UNROLL factor=4
+                FDTYPE prod = (FDTYPE)xj[l] * (FDTYPE)w[l];
+                acc[l] = (DTYPE)((FDTYPE)acc[l] + prod);
             }
         }
-        B_out.write(out_vec_B);
+        
+        DTYPE_VEC delta_vec;
+        for (int l = 0; l < VEC_FACTOR; ++l) {
+            #pragma HLS UNROLL factor=4
+            delta_vec[l] = softplus_elem(acc[l]);
+        }
+        
+        delta_out_A.write(delta_vec);
+        delta_out_B.write(delta_vec);
+        delta_buf[i] = delta_vec;  // Store for reuse if needed
     }
-    
-    projection_C: for(int i = 0; i < N; i++) {
-                #pragma HLS PIPELINE II=4
-        
-        DTYPE_VEC out_vec_C;
-        
-        compute_C: for(int j = 0; j < VEC_D; j++) {
-            #pragma HLS UNROLL factor=2
-            for(int k = 0; k < VEC_FACTOR; k++) {
+
+    // Compute B projection (N outputs)
+    for (int i = 0; i < N; ++i) {
+        #pragma HLS PIPELINE II=4
+        DTYPE_VEC outB;
+        for (int l = 0; l < VEC_FACTOR; ++l) outB[l] = (DTYPE)0;
+        for (int j = 0; j < VEC_D; ++j) {
+            DTYPE_VEC xj = X_buf[j];
+            DTYPE_VEC w = W_B[i][j];
+            for (int l = 0; l < VEC_FACTOR; ++l) {
                 #pragma HLS UNROLL
-                if (j == 0) out_vec_C[k] = 0;
-                out_vec_C[k] += X_ssm_buffer[j][k] * W_C[i][j][k];
+                outB[l] = (DTYPE)((FDTYPE)outB[l] + (FDTYPE)xj[l] * (FDTYPE)w[l]);
             }
         }
-
-        C_out.write(out_vec_C);
+        B_out.write(outB);
     }
-    
-    projection_delta_stream: for(int i = 0; i < VEC_D; i++) {
-#pragma HLS PIPELINE II=4
-        
-        DTYPE_VEC out_vec_delta;
-        
-        compute_delta: for(int j = 0; j < VEC_D; j++) {
-            #pragma HLS UNROLL factor=2
-            for(int k = 0; k < VEC_FACTOR; k++) {
-                #pragma HLS UNROLL
-                if (j == 0) out_vec_delta[k] = 0;
-                out_vec_delta[k] += X_ssm_buffer[j][k] * W_delta[i][j][k];
-            }
-        }
-        
-        // apply_softplus: for(int k = 0; k < VEC_FACTOR; k++) {
-        //     #pragma HLS UNROLL
-        //     DTYPE val =out_vec_delta[k];
 
-        //    out_vec_delta[k] = (DTYPE)hls::log((DTYPE)1.0 + hls::exp(val));
-        // }
-        // delta_out.write(out_vec_delta);
-        delta_out.write(lut_softplus_vec(out_vec_delta));
+    // Compute C but emit per (i,j) blocks: for each i, compute all j blocks (so total N*VEC_D writes)
+    for (int i = 0; i < N; ++i) {
+        // For each j produce C_{i,j} = sum over t of xbuf[t] * W_C[i][t]_lane (per-lane)
+        for (int j = 0; j < VEC_D; ++j) {
+            #pragma HLS PIPELINE II=4
+            DTYPE_VEC outCij;
+            for (int l = 0; l < VEC_FACTOR; ++l) outCij[l] = (DTYPE)0;
+            for (int t = 0; t < VEC_D; ++t) {
+                DTYPE_VEC x_t = X_buf[t];
+                DTYPE_VEC w = W_C[i][t];
+                for (int l = 0; l < VEC_FACTOR; ++l) {
+                    #pragma HLS UNROLL
+                    outCij[l] = (DTYPE)((FDTYPE)outCij[l] + (FDTYPE)x_t[l] * (FDTYPE)w[l]);
+                }
+            }
+            // write C_{i,j}
+            C_out.write(outCij);
+        }
     }
 }
 
-// ==================== Part 2: A to ddA ====================
 
-void A_to_ddA_stream(hls::stream<DTYPE_VEC>& A_in, hls::stream<DTYPE_VEC>& delta_in, 
+void A_to_ddA_stream(hls::stream<DTYPE_VEC>& A_in, hls::stream<DTYPE_VEC>& delta_in,
                      hls::stream<DTYPE_VEC>& ddA_out) {
-     #pragma HLS INLINE OFF
-    DTYPE_VEC delta_buffer[VEC_D];
-    #pragma HLS ARRAY_PARTITION variable=delta_buffer complete
-    
-    cache_delta: for(int j = 0; j < VEC_D; j++) {
-        #pragma HLS PIPELINE II=2
-        delta_buffer[j] = delta_in.read();
-    }
-    // Process A and delta to produce ddA
- process_A_delta: for(int i = 0; i < N; i++) {
-        #pragma HLS PIPELINE II=2
-        
-        DTYPE_VEC A_val = A_in.read();
-        
-        for(int j = 0; j < VEC_D; j++) {
-            DTYPE_VEC delta_val = delta_buffer[j];
-            //  dA = A * delta
-            DTYPE_VEC dA_vec = A_val * delta_val;
-            
-            //  ddA = exp(dA)
-            // DTYPE_VEC ddA_vec;
-            // for(int k = 0; k < VEC_FACTOR; k++) {
-            //     DTYPE dA_val = dA_vec[k];
+    #pragma HLS INLINE off
 
-            //      ddA_vec[k] = (DTYPE)hls::exp(dA_vec[k]);
-            // }
-            // ddA_out.write(ddA_vec);
-            ddA_out.write(lut_exp_vec(dA_vec));
+    // Read delta once (VEC_D vectors)
+    DTYPE_VEC delta_buf[VEC_D];
+    #pragma HLS BIND_STORAGE variable=delta_buf type=ram_s2p impl=bram
+    for (int j = 0; j < VEC_D; ++j) {
+        #pragma HLS PIPELINE II=1
+        delta_buf[j] = delta_in.read();
+    }
+
+    // For each A vector (N), compute with each delta vector (VEC_D)
+    for (int i = 0; i < N; ++i) {
+        #pragma HLS PIPELINE II=4
+        DTYPE_VEC A_vec = A_in.read();
+        
+        for (int j = 0; j < VEC_D; ++j) {
+            DTYPE_VEC dA, ddA;
+            DTYPE_VEC delta_v = delta_buf[j];
+            
+            for (int l = 0; l < VEC_FACTOR; ++l) {
+                #pragma HLS UNROLL factor=4
+                FDTYPE prod = (FDTYPE)A_vec[l] * (FDTYPE)delta_v[l];
+                dA[l] = (DTYPE) prod;
+                ddA[l] = exp_elem(dA[l]);  // exp in-place
+            }
+            ddA_out.write(ddA);
         }
     }
 }
 
 // ==================== Part 3: B to dB ====================
-
-void B_to_dB_stream(hls::stream<DTYPE_VEC>& B_in, hls::stream<DTYPE_VEC>& delta_in, 
+void B_to_dB_stream(hls::stream<DTYPE_VEC>& B_in, hls::stream<DTYPE_VEC>& delta_in,
                     hls::stream<DTYPE_VEC>& dB_out) {
-    #pragma HLS INLINE OFF
-    
-    DTYPE_VEC delta_buffer[VEC_D];
-    #pragma HLS ARRAY_PARTITION variable=delta_buffer complete
-    
-    read_delta_dB: for(int j = 0; j < VEC_D; j++) {
-        #pragma HLS PIPELINE II=2
-        delta_buffer[j] = delta_in.read();
+    #pragma HLS INLINE off
+
+    // Read delta once (VEC_D vectors)
+    DTYPE_VEC delta_buf[VEC_D];
+    #pragma HLS BIND_STORAGE variable=delta_buf type=ram_s2p impl=bram
+    for (int j = 0; j < VEC_D; ++j) {
+        #pragma HLS PIPELINE II=1
+        delta_buf[j] = delta_in.read();
     }
-    
-    process_B_delta: for(int i = 0; i < N; i++) {
-        #pragma HLS PIPELINE II=2
+
+    // For each B vector (N), compute with each delta vector (VEC_D)
+    for (int i = 0; i < N; ++i) {
+        #pragma HLS PIPELINE II=4
+        DTYPE_VEC Bv = B_in.read();
         
-        DTYPE_VEC B_val = B_in.read();
-        
-        for(int j = 0; j < VEC_D; j++) {
-            DTYPE_VEC delta_val = delta_buffer[j];
-            DTYPE_VEC dB_vec = B_val * delta_val;
-            dB_out.write(dB_vec);
+        for (int j = 0; j < VEC_D; ++j) {
+            DTYPE_VEC out;
+            DTYPE_VEC dlt = delta_buf[j];
+            
+            for (int l = 0; l < VEC_FACTOR; ++l) {
+                #pragma HLS UNROLL factor=4
+                FDTYPE prod = (FDTYPE)Bv[l] * (FDTYPE)dlt[l];
+                out[l] = (DTYPE) prod;
+            }
+            dB_out.write(out);
         }
     }
 }
 
 // ==================== Part 4: H update and final output ====================
-
-void update_H_stream(hls::stream<DTYPE_VEC>& ddA_in, hls::stream<DTYPE_VEC>& dX_in, 
+void update_H_stream(hls::stream<DTYPE_VEC>& ddA_in, hls::stream<DTYPE_VEC>& dX_in,
                      hls::stream<DTYPE_VEC>& dB_in, hls::stream<DTYPE_VEC>& H0_in,
                      hls::stream<DTYPE_VEC>& H1_out) {
-    #pragma HLS INLINE OFF
-    
-    DTYPE_VEC dX_buffer[VEC_D];
-    #pragma HLS ARRAY_PARTITION variable=dX_buffer complete
-    
-    read_dX: for(int j = 0; j < VEC_D; j++) {
+    #pragma HLS INLINE off
+
+    // cache dX (VEC_D)
+    DTYPE_VEC dX_buf[VEC_D];
+    #pragma HLS ARRAY_PARTITION variable=dX_buf cyclic factor=2
+    for (int j = 0; j < VEC_D; ++j) {
         #pragma HLS PIPELINE II=1
-        dX_buffer[j] = dX_in.read();
+        dX_buf[j] = dX_in.read();
     }
-    
-     update_H_loop: for(int i = 0; i < N; i++) {
-        #pragma HLS PIPELINE II=1
-        
-        for(int j = 0; j < VEC_D; j++) {
-            DTYPE_VEC H0_val = H0_in.read();
-            DTYPE_VEC ddA_val = ddA_in.read();
-            DTYPE_VEC dB_val = dB_in.read();
-            DTYPE_VEC dX_val = dX_buffer[j];
-            
-            // H1 = H0 * ddA + dB * dX
-            DTYPE_VEC H1_val = H0_val * ddA_val + dB_val * dX_val;
-            H1_out.write(H1_val);
+
+    for (int i = 0; i < N; ++i) {
+        #pragma HLS PIPELINE II=4
+        for (int j = 0; j < VEC_D; ++j) {
+            DTYPE_VEC H0v = H0_in.read();   // H0(i,j)
+            DTYPE_VEC ddA = ddA_in.read();  // ddA(i,j)
+            DTYPE_VEC dBv = dB_in.read();   // dB(i,j)
+            DTYPE_VEC dx = dX_buf[j];       // dX(j) reused
+            DTYPE_VEC H1v;
+            for (int l = 0; l < VEC_FACTOR; ++l) {
+                #pragma HLS UNROLL
+                FDTYPE v = (FDTYPE)H0v[l] * (FDTYPE)ddA[l] + (FDTYPE)dBv[l] * (FDTYPE)dx[l];
+                H1v[l] = (DTYPE) v;
+            }
+            H1_out.write(H1v); // writes (i,j)
         }
     }
 }
 
-void final_output_stream(hls::stream<DTYPE_VEC>& X_gate_in, hls::stream<DTYPE_VEC>& H1_in, 
+void final_output_stream(hls::stream<DTYPE_VEC>& X_gate_in, hls::stream<DTYPE_VEC>& H1_in,
                          hls::stream<DTYPE_VEC>& C_in, hls::stream<DTYPE_VEC>& out) {
-    
-    DTYPE_VEC X_gate_buffer[VEC_D];
-    #pragma HLS ARRAY_PARTITION variable=X_gate_buffer complete
-    
-    DTYPE_VEC C_buffer[N];
-    #pragma HLS ARRAY_PARTITION variable=C_buffer cyclic factor=8 dim=1
-    
-    read_X_gate: for(int j = 0; j < VEC_D; j++) {
+    #pragma HLS INLINE off
+
+    // Read X_gate (VEC_D)
+    DTYPE_VEC X_gate[VEC_D];
+    #pragma HLS ARRAY_PARTITION variable=X_gate cyclic factor=2
+    for (int j = 0; j < VEC_D; ++j) {
         #pragma HLS PIPELINE II=1
-        X_gate_buffer[j] = X_gate_in.read();
+        X_gate[j] = X_gate_in.read();
     }
-    
-    read_C: for(int i = 0; i < N; i++) {
+
+    // Read all C into Cbuf as N x VEC_D items (BRAM-like)
+    // Store linearized as Cbuf[i * VEC_D + j]
+    static DTYPE_VEC Cbuf[N * VEC_D];
+    for (int idx = 0; idx < N * VEC_D; ++idx) {
         #pragma HLS PIPELINE II=1
-        C_buffer[i] = C_in.read();
+        Cbuf[idx] = C_in.read(); // expecting C in same (i,j) order
     }
-    
-    DTYPE_VEC temp_acc[VEC_D];
-    #pragma HLS ARRAY_PARTITION variable=temp_acc complete
-    
-    init_acc: for(int j = 0; j < VEC_D; j++) {
-        #pragma HLS UNROLL
-        for(int k = 0; k < VEC_FACTOR; k++) {
+
+    // accumulator per j
+    DTYPE_VEC acc[VEC_D];
+    #pragma HLS ARRAY_PARTITION variable=acc cyclic factor=2
+    for (int j = 0; j < VEC_D; ++j) {
+        for (int l = 0; l < VEC_FACTOR; ++l) {
             #pragma HLS UNROLL
-            temp_acc[j][k] = 0;
+            acc[j][l] = (DTYPE)0;
         }
     }
-    
-    accumulate_H1_C: for(int i = 0; i < N; i++) {
-        #pragma HLS PIPELINE II=2
-        DTYPE_VEC C_val = C_buffer[i];
-        for(int j = 0; j < VEC_D; j++) {
-            #pragma HLS UNROLL factor=2
-            DTYPE_VEC H1_val = H1_in.read();
-            temp_acc[j] += H1_val * C_val;
+
+    // Read H1 sequentially and accumulate: H1 provides N * VEC_D vectors in (i,j) order
+    for (int i = 0; i < N; ++i) {
+        for (int j = 0; j < VEC_D; ++j) {
+            #pragma HLS PIPELINE II=4
+            DTYPE_VEC H1v = H1_in.read();         
+            DTYPE_VEC Cij = Cbuf[i * VEC_D + j];   
+
+            // lane-wise accumulate
+            for (int l = 0; l < VEC_FACTOR; ++l) {
+                #pragma HLS UNROLL
+                acc[j][l] = (DTYPE)((FDTYPE)acc[j][l] + (FDTYPE)H1v[l] * (FDTYPE)Cij[l]);
+            }
         }
     }
-    
-    final_output: for(int j = 0; j < VEC_D; j++) {
-        #pragma HLS PIPELINE II=1
-        DTYPE_VEC out_val = X_gate_buffer[j] + temp_acc[j];
-        out.write(out_val);
-    }
-}
 
-void duplicate_X_ssm_stream(hls::stream<DTYPE_VEC>& in, 
-                           hls::stream<DTYPE_VEC>& out1) {
-    #pragma HLS INLINE OFF
-    for(int i = 0; i < VEC_D; i++) {
+    // Finalize outputs: out_j = X_gate[j] + acc[j]
+    for (int j = 0; j < VEC_D; ++j) {
         #pragma HLS PIPELINE II=1
-        DTYPE_VEC val = in.read();
-        out1.write(val);
-    }
-}
-
-void duplicate_delta_stream(hls::stream<DTYPE_VEC>& in,
-                           hls::stream<DTYPE_VEC>& out1,
-                           hls::stream<DTYPE_VEC>& out2) {
-    #pragma HLS INLINE OFF
-    for(int i = 0; i < VEC_D; i++) {
-        #pragma HLS PIPELINE II=1
-        DTYPE_VEC val = in.read();
-        out1.write(val);
-        out2.write(val);
+        DTYPE_VEC outv;
+        for (int l = 0; l < VEC_FACTOR; ++l) {
+            #pragma HLS UNROLL
+            outv[l] = (DTYPE)((FDTYPE)X_gate[j][l] + (FDTYPE)acc[j][l]);
+        }
+        out.write(outv);
     }
 }
 
 void duplicate_H1_stream(hls::stream<DTYPE_VEC>& in,
                         hls::stream<DTYPE_VEC>& out1,
                         hls::stream<DTYPE_VEC>& out2) {
-    #pragma HLS INLINE OFF
-    for(int i = 0; i < N * VEC_D; i++) {
+    #pragma HLS INLINE off
+    for (int i = 0; i < N * VEC_D; ++i) {
         #pragma HLS PIPELINE II=1
-        DTYPE_VEC val = in.read();
-        out1.write(val);
-        out2.write(val);
+        DTYPE_VEC v = in.read();
+        out1.write(v);
+        out2.write(v);
     }
 }
 
@@ -350,16 +380,14 @@ void SSMU(
     hls::stream<DTYPE_VEC>& H0_in,
     hls::stream<DTYPE_VEC>& H1_out,
     hls::stream<DTYPE_VEC>& out) {
-    
+
     #pragma HLS DATAFLOW
-    
+
     // Internal streams
-        hls::stream<DTYPE_VEC> X_gate_stream("X_gate_stream");
+    hls::stream<DTYPE_VEC> X_gate_stream("X_gate_stream");
     hls::stream<DTYPE_VEC> X_ssm_stream("X_ssm_stream");
-    hls::stream<DTYPE_VEC> X_ssm_proj_stream("X_ssm_proj_stream");
     hls::stream<DTYPE_VEC> B_stream("B_stream");
     hls::stream<DTYPE_VEC> C_stream("C_stream");
-    hls::stream<DTYPE_VEC> delta_stream("delta_stream");
     hls::stream<DTYPE_VEC> delta_stream_A("delta_stream_A");
     hls::stream<DTYPE_VEC> delta_stream_B("delta_stream_B");
     hls::stream<DTYPE_VEC> ddA_stream("ddA_stream");
@@ -367,43 +395,35 @@ void SSMU(
     hls::stream<DTYPE_VEC> H1_temp_stream("H1_temp_stream");
     hls::stream<DTYPE_VEC> H1_final_stream("H1_final_stream");
 
-    // Set appropriate depths for streams
+    // Minimal FIFO depths
     #pragma HLS STREAM variable=X_gate_stream depth=2
     #pragma HLS STREAM variable=X_ssm_stream depth=2
-    #pragma HLS STREAM variable=X_ssm_proj_stream depth=2
     #pragma HLS STREAM variable=B_stream depth=2
     #pragma HLS STREAM variable=C_stream depth=2
-    #pragma HLS STREAM variable=delta_stream depth=2
     #pragma HLS STREAM variable=delta_stream_A depth=2
     #pragma HLS STREAM variable=delta_stream_B depth=2
     #pragma HLS STREAM variable=ddA_stream depth=2
     #pragma HLS STREAM variable=dB_stream depth=2
     #pragma HLS STREAM variable=H1_temp_stream depth=2
     #pragma HLS STREAM variable=H1_final_stream depth=2
-    
-    // Part 1: X to X_gate, B, C, delta
-    conv1d_silu_stream(X_in, kernel_in, X_gate_stream, X_ssm_stream);
-    
-    // Split X_ssm for multiple consumers - now as a function call
-    duplicate_X_ssm_stream(X_ssm_stream, X_ssm_proj_stream);
-    
-    projection_streams(X_ssm_proj_stream, W_B, W_C, W_delta, B_stream, C_stream, delta_stream);
 
-    // Split delta for multiple consumers - now as a function call
-    duplicate_delta_stream(delta_stream, delta_stream_A, delta_stream_B);
-    
-    // Part 2: A to ddA
+    // Part 1: Compute X_gate and X_ssm
+    conv1d_silu_stream(X_in, kernel_in, X_gate_stream, X_ssm_stream);
+
+    // Part 2: Projections (produces B, C, and delta for both A and B)
+    projection_streams(X_ssm_stream, W_B, W_C, W_delta, 
+                      B_stream, C_stream, delta_stream_A, delta_stream_B);
+
+    // Part 3: A -> ddA and B -> dB (parallel)
     A_to_ddA_stream(A_in, delta_stream_A, ddA_stream);
-    
-    // Part 3: B to dB  
     B_to_dB_stream(B_stream, delta_stream_B, dB_stream);
-    
-    // Part 4: H update and final output
-    update_H_stream(ddA_stream, X_ssm_proj_stream, dB_stream, H0_in, H1_temp_stream);
-    
-    // Split H1 for output and final computation - now as a function call
+
+    // Part 4: Update H state
+    update_H_stream(ddA_stream, X_ssm_stream, dB_stream, H0_in, H1_temp_stream);
+
+    // Duplicate H1 for output and next iteration
     duplicate_H1_stream(H1_temp_stream, H1_final_stream, H1_out);
-    
-    // Final output computation
+
+    // Part 5: Final output
     final_output_stream(X_gate_stream, H1_final_stream, C_stream, out);
 }
