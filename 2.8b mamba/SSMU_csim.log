@@ -1,6 +1,5 @@
 INFO: [SIM 2] *************** CSIM start ***************
 INFO: [SIM 4] CSIM will launch CLANG as the compiler.
-   Compiling ../../../../tb_ssm.cpp in debug mode
    Compiling ../../../../linear.cpp in debug mode
    Generating csim.exe
 [TB] tb_ssm.cpp linked OK (main() present).

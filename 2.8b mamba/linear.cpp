@@ -157,7 +157,7 @@ static void add_D_skip_local(hls::stream<DTYPE_VEC>& y_in,
 
         DTYPE_VEC o;
         for (int l = 0; l < VEC_FACTOR; ++l) {
-#pragma HLS UNROLL factor=4
+#pragma HLS UNROLL 
             ACC_T yy = (ACC_T)vget(y, l);
             ACC_T xx = (ACC_T)vget(x, l);
             ACC_T dd = (ACC_T)vget(d, l);
@@ -180,7 +180,7 @@ static void add_residual_local(hls::stream<DTYPE_VEC>& y_in,
         DTYPE_VEC x = x_res_in.read();
         DTYPE_VEC o;
         for (int l = 0; l < VEC_FACTOR; ++l) {
-#pragma HLS UNROLL factor=4
+#pragma HLS UNROLL
             vset(o, l, (DTYPE)((ACC_T)vget(y, l) + (ACC_T)vget(x, l)));
         }
         y_out.write(o);
@@ -230,7 +230,7 @@ static void rmsnorm_vecD_stream_local(hls::stream<DTYPE_VEC>& x_in,
         DTYPE_VEC w = RMS_weight[j];
         DTYPE_VEC o;
         for (int l = 0; l < VEC_FACTOR; ++l) {
-#pragma HLS UNROLL factor=4
+#pragma HLS UNROLL 
             float xv = (float)(ACC_T)vget(xbuf[j], l);
             float ww = (float)(ACC_T)vget(w, l);
             float yv = xv * inv * ww;
@@ -269,7 +269,7 @@ static void in_proj_stream_local(hls::stream<DTYPE_VEC>& X_in_raw,
 #pragma HLS ARRAY_PARTITION variable=accX complete dim=1
 #pragma HLS ARRAY_PARTITION variable=accZ complete dim=1
         for (int l = 0; l < VEC_FACTOR; ++l) {
-#pragma HLS UNROLL factor=4
+#pragma HLS UNROLL 
             accX[l] = (ACC_T)0;
             accZ[l] = (ACC_T)0;
         }
@@ -281,7 +281,7 @@ static void in_proj_stream_local(hls::stream<DTYPE_VEC>& X_in_raw,
             DTYPE_VEC wz = W_in_z[i][j];
 
             for (int l = 0; l < VEC_FACTOR; ++l) {
-#pragma HLS UNROLL factor=4
+#pragma HLS UNROLL 
                 ACC_T xv = (ACC_T)vget(x,  l);
                 accX[l] += xv * (ACC_T)vget(wx, l);
                 accZ[l] += xv * (ACC_T)vget(wz, l);
@@ -290,7 +290,7 @@ static void in_proj_stream_local(hls::stream<DTYPE_VEC>& X_in_raw,
 
         DTYPE_VEC outX, outZ;
         for (int l = 0; l < VEC_FACTOR; ++l) {
-#pragma HLS UNROLL factor=4
+#pragma HLS UNROLL 
             vset(outX, l, (DTYPE)accX[l]);
             vset(outZ, l, (DTYPE)accZ[l]);
         }
@@ -342,7 +342,7 @@ static void conv1d_silu_stream_local(hls::stream<DTYPE_VEC>& X_for_conv_in,
         // gate = SiLU(z)
         DTYPE_VEC gate_out;
         for (int k = 0; k < VEC_FACTOR; ++k) {
-#pragma HLS UNROLL factor=4
+#pragma HLS UNROLL 
             vset(gate_out, k, silu_elem(vget(z_in, k)));
         }
         X_gate_out.write(gate_out);
@@ -369,7 +369,7 @@ static void conv1d_silu_stream_local(hls::stream<DTYPE_VEC>& X_for_conv_in,
         // conv
         DTYPE_VEC conv_out;
         for (int lane = 0; lane < VEC_FACTOR; ++lane) {
-#pragma HLS UNROLL factor=4
+#pragma HLS UNROLL 
             ACC_T sum = 0;
             for (int kk = 0; kk < K; ++kk) {
 #pragma HLS UNROLL
@@ -381,7 +381,7 @@ static void conv1d_silu_stream_local(hls::stream<DTYPE_VEC>& X_for_conv_in,
         // ssm input = SiLU(conv)
         DTYPE_VEC ssm_out;
         for (int k = 0; k < VEC_FACTOR; ++k) {
-#pragma HLS UNROLL factor=4
+#pragma HLS UNROLL
             vset(ssm_out, k, silu_elem(vget(conv_out, k)));
         }
         X_ssm_out.write(ssm_out);
@@ -421,12 +421,12 @@ static void projection_streams_local(hls::stream<DTYPE_VEC>& X_ssm_in,
         ACC_T acc[VEC_FACTOR];
 #pragma HLS ARRAY_PARTITION variable=acc complete dim=1
         for (int l = 0; l < VEC_FACTOR; ++l) {
-#pragma HLS UNROLL factor=4
+#pragma HLS UNROLL
             acc[l] = (ACC_T)0;
         }
 
         for (int jt = 0; jt < VEC_D; jt += J_TILE) {
-#pragma HLS PIPELINE II=8
+#pragma HLS PIPELINE II=1
             for (int jj = 0; jj < J_TILE; ++jj) {
 #pragma HLS UNROLL
                 X_tile[jj] = X_buf[jt + jj];
@@ -435,7 +435,7 @@ static void projection_streams_local(hls::stream<DTYPE_VEC>& X_ssm_in,
 #pragma HLS UNROLL
                 DTYPE_VEC w = W_delta[i][jt + jj];
                 for (int l = 0; l < VEC_FACTOR; ++l) {
-#pragma HLS UNROLL factor=4
+#pragma HLS UNROLL
                     acc[l] += (ACC_T)vget(X_tile[jj], l) * (ACC_T)vget(w, l);
                 }
             }
@@ -443,7 +443,7 @@ static void projection_streams_local(hls::stream<DTYPE_VEC>& X_ssm_in,
 
         DTYPE_VEC delta_vec;
         for (int l = 0; l < VEC_FACTOR; ++l) {
-#pragma HLS UNROLL factor=4
+#pragma HLS UNROLL 
             vset(delta_vec, l, softplus_pwl_fx(acc[l]));
         }
         delta_out.write(delta_vec);
@@ -463,13 +463,13 @@ static void projection_streams_local(hls::stream<DTYPE_VEC>& X_ssm_in,
 #pragma HLS ARRAY_PARTITION variable=accB complete dim=1
 #pragma HLS ARRAY_PARTITION variable=accC complete dim=1
         for (int l = 0; l < VEC_FACTOR; ++l) {
-#pragma HLS UNROLL factor=4
+#pragma HLS UNROLL
             accB[l] = (ACC_T)0;
             accC[l] = (ACC_T)0;
         }
 
         for (int jt = 0; jt < VEC_D; jt += J_TILE) {
-#pragma HLS PIPELINE II=8
+#pragma HLS PIPELINE II=1
             for (int jj = 0; jj < J_TILE; ++jj) {
 #pragma HLS UNROLL
                 X_tile[jj] = X_buf[jt + jj];
@@ -480,7 +480,7 @@ static void projection_streams_local(hls::stream<DTYPE_VEC>& X_ssm_in,
                 DTYPE_VEC wB = W_B[i][jt + jj];
                 DTYPE_VEC wC = W_C[i][jt + jj];
                 for (int l = 0; l < VEC_FACTOR; ++l) {
-#pragma HLS UNROLL factor=4
+#pragma HLS UNROLL 
                     ACC_T x = (ACC_T)vget(X_tile[jj], l);
                     accB[l] += x * (ACC_T)vget(wB, l);
                     accC[l] += x * (ACC_T)vget(wC, l);
@@ -490,7 +490,7 @@ static void projection_streams_local(hls::stream<DTYPE_VEC>& X_ssm_in,
 
         DTYPE_VEC outB, outC;
         for (int l = 0; l < VEC_FACTOR; ++l) {
-#pragma HLS UNROLL factor=4
+#pragma HLS UNROLL 
             vset(outB, l, (DTYPE)accB[l]);
             vset(outC, l, (DTYPE)accC[l]);
         }
@@ -547,7 +547,7 @@ static void fused_update_write_accum_output_mamba(
 #pragma HLS PIPELINE II=1
         DTYPE_VEC z;
         for (int l = 0; l < VEC_FACTOR; ++l) {
-#pragma HLS UNROLL factor=4
+#pragma HLS UNROLL 
             vset(z, l, (DTYPE)0);
         }
         acc[j] = z;
@@ -572,7 +572,7 @@ static void fused_update_write_accum_output_mamba(
 
             DTYPE_VEC H1v;
             for (int l = 0; l < VEC_FACTOR; ++l) {
-#pragma HLS UNROLL factor=4
+#pragma HLS UNROLL 
                 ACT_T a  = (ACT_T)vget(A_vec, l);
                 ACT_T dl = (ACT_T)vget(dlt,  l);
                 // (optional safety clamp for polynomial range)
@@ -594,7 +594,7 @@ static void fused_update_write_accum_output_mamba(
             DTYPE_VEC aold = acc[j];
             DTYPE_VEC anew;
             for (int l = 0; l < VEC_FACTOR; ++l) {
-#pragma HLS UNROLL factor=4
+#pragma HLS UNROLL 
                 ACC_T base = (ACC_T)vget(aold, l);
                 ACC_T addt = (ACC_T)vget(H1v,  l) * (ACC_T)vget(C_vec, l);
                 vset(anew, l, (DTYPE)(base + addt));
@@ -614,7 +614,7 @@ static void fused_update_write_accum_output_mamba(
         DTYPE_VEC gate = X_gate[j];
         DTYPE_VEC outv;
         for (int l = 0; l < VEC_FACTOR; ++l) {
-#pragma HLS UNROLL factor=4
+#pragma HLS UNROLL 
             ACC_T g = (ACC_T)vget(gate, l);
             ACC_T y = (ACC_T)vget(yssm, l);
             vset(outv, l, (DTYPE)(g * y));
@@ -651,7 +651,7 @@ static void out_proj_stream_local(hls::stream<DTYPE_VEC>& X_in,
         ACC_T accY[VEC_FACTOR];
 #pragma HLS ARRAY_PARTITION variable=accY complete dim=1
         for (int l = 0; l < VEC_FACTOR; ++l) {
-#pragma HLS UNROLL factor=4
+#pragma HLS UNROLL 
             accY[l] = (ACC_T)0;
         }
 
@@ -660,14 +660,14 @@ static void out_proj_stream_local(hls::stream<DTYPE_VEC>& X_in,
             DTYPE_VEC x = X_buf[j];
             DTYPE_VEC w = W_out[i][j];
             for (int l = 0; l < VEC_FACTOR; ++l) {
-#pragma HLS UNROLL factor=4
+#pragma HLS UNROLL 
                 accY[l] += (ACC_T)vget(x, l) * (ACC_T)vget(w, l);
             }
         }
 
         DTYPE_VEC y;
         for (int l = 0; l < VEC_FACTOR; ++l) {
-#pragma HLS UNROLL factor=4
+#pragma HLS UNROLL 
             vset(y, l, (DTYPE)accY[l]);
         }
         Y_out.write(y);
