@@ -1,0 +1,10 @@
+INFO: [SIM 2] *************** CSIM start ***************
+INFO: [SIM 4] CSIM will launch CLANG as the compiler.
+   Compiling ../../../../tb_ssm.cpp in debug mode
+   Compiling ../../../../quant.cpp in debug mode
+   Generating csim.exe
+[TB] tb_ssm.cpp (quant-matched golden)
+[TB] PASS (tc=0)
+INFO [HLS SIM]: The maximum depth reached by any hls::stream() instance in the design is 819200
+INFO: [SIM 1] CSim done with 0 errors.
+INFO: [SIM 3] *************** CSIM finish ***************
