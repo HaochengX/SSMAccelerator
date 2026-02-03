@@ -186,4 +186,5 @@ void SSMU(
     hls::stream<DTYPE_VEC>& out      // D_T tiles
 );
 
-#endif // __UCI_EECS_SSMU_HEADER_LAYERSH_ALIGNED__
+#endif 
+
