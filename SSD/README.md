@@ -1,1 +1,1 @@
-https://github.com/HaochengX/SSMAccelerator/blob/main/SSD/Mamba2ssd.png
+![computation graph](https://github.com/HaochengX/SSMAccelerator/blob/main/SSD/Mamba2ssd.png)
