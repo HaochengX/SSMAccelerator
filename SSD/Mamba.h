@@ -15,7 +15,7 @@ constexpr int EXPAND=2;
 constexpr int I=DIM*EXPAND;//inner
 constexpr int N=128;//state dimension
 constexpr int K=4;//conv kernel size
-constexpr int Q=64; //chunk
+constexpr int CHUNK=64; //chunk
 constexpr int H=80;//NHEAD
 constexpr int P=64;//HEADDIM, H*P=INNER
 

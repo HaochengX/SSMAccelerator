@@ -4,86 +4,110 @@
 
 #include "Mamba.h"
 
-inline void conv1d(
-    hls::stream<DTYPE_VEC>& input_stream,
-    
-    const FDTYPE conv_weights[VEC_CONV_DIM][VEC_FACTOR][K],
-    const FDTYPE conv_bias[VEC_CONV_DIM][VEC_FACTOR],
-    
-    hls::stream<DTYPE_VEC>& output_stream,
-    
-    int seq_len,
-    bool
- use_silu
+inline void conv1d_sequence(
+    hls::stream<DTYPE_VEC> &XBC_in,
+    hls::stream<DTYPE> &kernel_in,
+    hls::stream<DTYPE_VEC> &X_out,
+    hls::stream<DTYPE_VEC> &B_out,
+    hls::stream<DTYPE_VEC> &C_out
 ) {
-        constexpr int NUM_GROUPS = VEC_CONV_DIM;
+    #pragma HLS INLINE off
     
-    // 使用循环缓冲区存储状态
-    static FDTYPE group_states[NUM_GROUPS][VEC_FACTOR][K];
-    static int head_pointers[NUM_GROUPS][VEC_FACTOR];
+    const int XBC_VEC_COUNT = 132;        
+    const int X_VEC_COUNT = 128;          
+    const int B_VEC_COUNT = 2;            
+    const int C_VEC_COUNT = 2;            
     
-    #pragma HLS ARRAY_PARTITION variable=group_states complete dim=1
-    #pragma HLS ARRAY_PARTITION variable=group_states complete dim=2
-    #pragma HLS ARRAY_PARTITION variable=head_pointers complete dim=1
-    #pragma HLS ARRAY_PARTITION variable=head_pointers complete dim=2
-    
-    bool initialized = false;
-    
-    TIMESTEP_LOOP: for (int t = 0; t < seq_len; t++) {
-        #pragma HLS LOOP_TRIPCOUNT min=64 max=1024
+    BATCH_LOOP: for (int l = 0; l < LENGTH; l++) {
+        #pragma HLS LOOP_TRIPCOUNT min=1 max=32
         
-        if (!initialized && t == 0) {
-            INIT_HEAD: for (int g = 0; g < NUM_GROUPS; g++) {
-                for (int ch = 0; ch < VEC_FACTOR; ch++) {
-                    #pragma HLS UNROLL
-                    head_pointers[g][ch] = 0;
-
-                    for (int k = 0; k < K; k++) {
-                        #pragma HLS UNROLL
-                        group_states[g][ch][k] = 0;
-                    }
-                }
+        DTYPE_VEC X_buffer[X_VEC_COUNT];
+        DTYPE_VEC B_buffer[B_VEC_COUNT];
+        DTYPE_VEC C_buffer[C_VEC_COUNT];
+        
+        for (int i = 0; i < XBC_VEC_COUNT; ++i) {
+            #pragma HLS PIPELINE II = 1
+            DTYPE_VEC data = XBC_in.read();
+            
+            if (i < X_VEC_COUNT) {
+                X_buffer[i] = data;
+            } else if (i < X_VEC_COUNT + B_VEC_COUNT) {
+                B_buffer[i - X_VEC_COUNT] = data;
+            } else {
+                C_buffer[i - X_VEC_COUNT - B_VEC_COUNT] = data;
             }
-            initialized = true;
         }
         
-        GROUP_LOOP: for (int group = 0; group < NUM_GROUPS; group++) {
-            #pragma HLS PIPELINE II=1
-            
-            DTYPE_VEC input_vec = input_stream.read();
-            
-            DTYPE_VEC output_vec;
-            
-            CHANNEL_LOOP: for (int ch = 0; ch < VEC_FACTOR; ch++) {
-                #pragma HLS UNROLL
-                
-                FDTYPE input_val = (FDTYPE)input_vec[ch];
-                
-                int head = head_pointers[group][ch];
-                
-                group_states[group][ch][head] = input_val;
-                
-                FDTYPE conv_acc = conv_bias[group][ch];
-                
-                for (int k = 0; k < K; k++) {
-                    #pragma HLS UNROLL
-                    int state_idx = (head + k) % K;
-                    conv_acc += group_states[group][ch][state_idx] * 
-                               conv_weights[group][ch][k];
+        static DTYPE kernel_buffer[K];
+        if (l == 0) {
+            for (int i = 0; i < K; ++i) {
+                #pragma HLS PIPELINE
+                kernel_buffer[i] = kernel_in.read();
+            }
+        }
+        
+        static DTYPE line_buffer[K - 1][VEC_FACTOR];
+        #pragma HLS BIND_STORAGE variable = line_buffer type = ram_s2p impl = bram
+        
+        INIT_LINE_BUFFER: if (l == 0) {
+            for (int i = 0; i < K - 1; ++i) {
+                for (int k = 0; k < VEC_FACTOR; ++k) {
+                    #pragma HLS PIPELINE II = 1
+                    line_buffer[i][k] = 0;
                 }
-                
-                head_pointers[group][ch] = (head + 1) % K;
-                
-                if (use_silu) {
-                    output_vec[ch] = (DTYPE)silu_elem(conv_acc);
-                } else {
-                    output_vec[ch] = (DTYPE)conv_acc;
+            }
+        }
+        
+        CONV_PROC: for (int i = 0; i < X_VEC_COUNT; ++i) {
+            DTYPE_VEC in_vec = X_buffer[i];
+            DTYPE window[K][VEC_FACTOR];
+            
+            for (int j = 0; j < K - 1; ++j) {
+                for (int k = 0; k < VEC_FACTOR; ++k) {
+                    #pragma HLS PIPELINE II = 1
+                    window[j][k] = line_buffer[j][k];
                 }
             }
             
-            output_stream.write(output_vec);
+            for (int k = 0; k < VEC_FACTOR; ++k) {
+                #pragma HLS PIPELINE II = 1
+                window[K - 1][k] = in_vec[k];
+            }
+            
+            for (int j = K - 2; j > 0; --j) {
+                for (int k = 0; k < VEC_FACTOR; ++k) {
+                    #pragma HLS PIPELINE II = 1
+                    line_buffer[j][k] = line_buffer[j - 1][k];
+                }
+            }
+            
+            for (int k = 0; k < VEC_FACTOR; ++k) {
+                #pragma HLS PIPELINE II = 1
+                line_buffer[0][k] = in_vec[k];
+            }
+            
+            DTYPE_VEC conv_out;
+            for (int lane = 0; lane < VEC_FACTOR; ++lane) {
+                FDTYPE sum = 0.0f;
+                for (int k = 0; k < K; ++k) {
+                    #pragma HLS PIPELINE II = 1
+                    sum += (FDTYPE)kernel_buffer[k] * (FDTYPE)window[k][lane];
+                }
+                conv_out[lane] = (DTYPE)sum;
+            }
+            
+            X_out.write(conv_out);
+        }
+        for (int i = 0; i < B_VEC_COUNT; ++i) {
+            #pragma HLS PIPELINE II = 1
+            B_out.write(B_buffer[i]);
+        }
+        
+        for (int i = 0; i < C_VEC_COUNT; ++i) {
+            #pragma HLS PIPELINE II = 1
+            C_out.write(C_buffer[i]);
         }
     }
 }
 
-#endif // MAMBA_CONV1D_OPTIMIZED_H
+#endif // CONV1D_H
