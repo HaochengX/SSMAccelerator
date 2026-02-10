@@ -4,23 +4,22 @@
 
 #include "Mamba.h"
 
-template<int SUM, int X, int Y, int Z>
-void splitter(
+inline void splitter(
     hls::stream<DTYPE_VEC>& in_stream,
     hls::stream<DTYPE_VEC>& a_stream,
     hls::stream<DTYPE_VEC>& b_stream,
-    hls::stream<DTYPE>& c_stream
+    hls::stream<DTYPE_VEC>& c_stream
 ) {
-    constexpr int VEC_PER_SAMPLE = (SUM + VEC_FACTOR - 1) / VEC_FACTOR;
+    constexpr int VEC_PER_SAMPLE = (INPUT_LINEAR_SIZE + VEC_FACTOR - 1) / VEC_FACTOR;
     
     constexpr int A_START = 0;
-    constexpr int A_END = X;
+    constexpr int A_END = I+2*N;
     
     constexpr int B_START = A_END;
-    constexpr int B_END = B_START + Y;
+    constexpr int B_END = B_START + I;
     
     constexpr int C_START = B_END;
-    constexpr int C_END = C_START + Z;
+    constexpr int C_END = C_START + H;
     
     DTYPE_VEC temp_vec;
     int vec_offset = 0;
@@ -30,16 +29,15 @@ void splitter(
         
         vec_offset = 0;
         SAMPLE_LOOP: for (int vec_idx = 0; vec_idx < VEC_PER_SAMPLE; vec_idx++) {
-            #pragma HLS PIPELINE II=1
             
             DTYPE_VEC input_vec = in_stream.read();
             
             PROCESS_VEC_ELEMENTS: for (int v = 0; v < VEC_FACTOR; v++) {
-                #pragma HLS UNROLL
+                #pragma HLS PIPELINE
                 
                 int element_idx = vec_idx * VEC_FACTOR + v;
                 
-                if (element_idx >= SUM) {
+                if (element_idx >= INPUT_LINEAR_SIZE) {
                     continue;
                 }
                 

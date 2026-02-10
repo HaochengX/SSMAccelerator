@@ -18,6 +18,7 @@ constexpr int K=4;//conv kernel size
 constexpr int CHUNK=64; //chunk
 constexpr int H=80;//NHEAD
 constexpr int P=64;//HEADDIM, H*P=INNER
+constexpr int NUM_CHUNKS = LENGTH / CHUNK;
 
 constexpr int INPUT_LINEAR_SIZE= 2*I + H + 2*N;
 constexpr int CONV_DIM = I + 2*N;
@@ -29,7 +30,11 @@ constexpr int VEC_D=DIM / VEC_FACTOR;
 constexpr int VEC_I=I / VEC_FACTOR;
 constexpr int VEC_INPUT_LINEAR=INPUT_LINEAR_SIZE / VEC_FACTOR;
 constexpr int VEC_N=N / VEC_FACTOR;
+constexpr int VEC_H=H / VEC_FACTOR;
 constexpr int VEC_CONV_DIM=CONV_DIM/VEC_FACTOR;
+constexpr int VEC_PER_CHUNK = CHUNK / VEC_FACTOR;
+constexpr int VEC_PER_HEAD = P / VEC_FACTOR;
+constexpr int VEC_PER_STATE = (P * N) / VEC_FACTOR;
 
 typedef float FDTYPE;
 

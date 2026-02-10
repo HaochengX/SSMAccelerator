@@ -17,10 +17,8 @@ inline void output_projection(
     SEQUENCE_LOOP: for (int l = 0; l < LENGTH; l++) {
     #pragma HLS LOOP_TRIPCOUNT min=1 max=32
         DTYPE y_buffer[I];
-        #pragma HLS ARRAY_PARTITION variable=y_buffer cyclic factor=VEC_FACTOR/2
         
         FDTYPE out_buffer[DIM];
-        #pragma HLS ARRAY_PARTITION variable=out_buffer cyclic factor=16
         
         READ_FEATURES: for (int i = 0; i < VEC_I; i++) {
             #pragma HLS PIPELINE II=1
@@ -34,7 +32,7 @@ inline void output_projection(
         }
         
         INIT_OUTPUT: for (int i = 0; i < DIM; i++) {
-            #pragma HLS UNROLL factor=16
+            #pragma HLS PIPELINE
             out_buffer[i] = 0;
         }
         
@@ -51,18 +49,16 @@ inline void output_projection(
                 int input_end = hls::min(input_start + INPUT_BLOCK_SIZE, VEC_I);
                 
                 COMPUTE_BLOCK: for (int out_vec_idx = output_start; out_vec_idx < output_end; out_vec_idx++) {
-                    #pragma HLS PIPELINE II=4
+
                     
                     for (int out_elem_idx = 0; out_elem_idx < VEC_FACTOR; out_elem_idx++) {
-                        #pragma HLS UNROLL factor=4
                         
                         FDTYPE acc = out_buffer[out_vec_idx * VEC_FACTOR + out_elem_idx];
                         
                         for (int in_vec_idx = input_start; in_vec_idx < input_end; in_vec_idx++) {
-                            #pragma HLS UNROLL factor=2
                             
                             for (int in_elem_idx = 0; in_elem_idx < VEC_FACTOR; in_elem_idx++) {
-                                #pragma HLS UNROLL
+                                #pragma HLS PIPELINE
                                 
                                 FDTYPE weight_val = weight_block[out_vec_idx][in_vec_idx][out_elem_idx][in_elem_idx];
                                 FDTYPE y_val = y_buffer[in_vec_idx * VEC_FACTOR + in_elem_idx];

@@ -19,23 +19,20 @@ inline void input_projection(
         #pragma HLS LOOP_TRIPCOUNT min=1 max=32
         
         DTYPE u_buffer[DIM];
-        #pragma HLS ARRAY_PARTITION variable=u_buffer cyclic factor=VEC_FACTOR
         
         FDTYPE proj[INPUT_LINEAR_SIZE];
-        #pragma HLS ARRAY_PARTITION variable=proj block factor=16
         
         READ_LOOP: for (int i = 0; i < VEC_D; i++) {
             #pragma HLS PIPELINE II=1
             DTYPE_VEC vec = u_stream.read();
             
             for (int j = 0; j < VEC_FACTOR; j++) {
-                #pragma HLS UNROLL
                 u_buffer[i * VEC_FACTOR + j] = vec[j];
             }
         }
         
         INIT_OUTPUT: for (int i = 0; i < INPUT_LINEAR_SIZE; i++) {
-            #pragma HLS UNROLL factor=16
+            #pragma HLS PIPELINE
             proj[i] = 0;
         }
         
@@ -52,17 +49,15 @@ inline void input_projection(
                 int input_end = hls::min(input_start + INPUT_BLOCK_SIZE, VEC_D);
                 
                 COMPUTE_OUTPUT_BLOCK: for (int o_idx = output_start; o_idx < output_end; o_idx++) {
-                    #pragma HLS PIPELINE II=4
-                    
+
                     int output_base = o_idx * VEC_FACTOR;
                     
                     COMPUTE_INPUT_BLOCK: for (int i_idx = input_start; i_idx < input_end; i_idx++) {
-                        #pragma HLS UNROLL factor=4
                         
                         int input_base = i_idx * VEC_FACTOR;
                         
                         for (int v = 0; v < VEC_FACTOR; v++) {
-                            #pragma HLS UNROLL
+                            #pragma HLS PIPELINE
                             
                             FDTYPE w_val = weight_block[o_idx][i_idx][v];
                             FDTYPE u_val = u_buffer[input_base + v];
@@ -82,7 +77,6 @@ inline void input_projection(
             DTYPE_VEC vec;
             int base_idx = i * VEC_FACTOR;
             
-            // 填充向量
             for (int v = 0; v < VEC_FACTOR; v++) {
                 #pragma HLS UNROLL
                 int idx = base_idx + v;

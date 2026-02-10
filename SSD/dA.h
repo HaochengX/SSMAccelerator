@@ -14,7 +14,6 @@ inline void dA_sequence(
         #pragma HLS LOOP_TRIPCOUNT min=1 max=32
         
         TIMESTEP_LOOP: for (int t = 0; t < VEC_PER_SAMPLE; t++) {
-            #pragma HLS PIPELINE II=1
             #pragma HLS LOOP_TRIPCOUNT min=1 max=1024
             
             DTYPE_VEC dt_vec = dt_stream.read();
@@ -22,7 +21,7 @@ inline void dA_sequence(
             DTYPE_VEC da_vec;
             
             HEAD_LOOP: for (int h = 0; h < VEC_FACTOR; h++) {
-                #pragma HLS UNROLL
+                #pragma HLS PIPELINE
                 
                 int global_idx = t * VEC_FACTOR + h;
                 

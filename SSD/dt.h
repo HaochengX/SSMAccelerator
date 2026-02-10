@@ -13,13 +13,12 @@ inline void softplus(
         
         TIMESTEP_LOOP: for (int t = 0; t < H/VEC_FACTOR; t++) {
             #pragma HLS LOOP_TRIPCOUNT min=1 max=1024
-            #pragma HLS PIPELINE II=1
             
             DTYPE_VEC dt_vec = dt_vec_input_stream.read();
             DTYPE_VEC processed_vec;
             
             PROCESS_VECTOR: for (int v = 0; v < VEC_FACTOR; v++) {
-                #pragma HLS UNROLL
+                #pragma HLS PIPELINE
                 processed_vec[v] = softplus_elem(dt_vec[v]);
             }
             

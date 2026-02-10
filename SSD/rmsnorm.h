@@ -1,5 +1,5 @@
-#ifdef RMSNROM_H
-#define RMSNROM_H
+#ifdef RMSNORM_H
+#define RMSNORM_H
 #include "Mamba.h"
 template<int DIM>
 inline void rms_norm_gated_core(
@@ -13,9 +13,9 @@ inline void rms_norm_gated_core(
         #pragma HLS LOOP_TRIPCOUNT min=1 max=1024
         
         FDTYPE square_sum = FDTYPE(0);
-        DTYPE_VEC gated_buffer[VEC_OUTPUT_LINEAR];
+        DTYPE_VEC gated_buffer[VEC_I];
         
-        for (int i = 0; i < VEC_OUTPUT_LINEAR; i++) {
+        for (int i = 0; i < VEC_I; i++) {
             #pragma HLS PIPELINE II=1
             
             DTYPE_VEC y_vec = y_stream.read();
@@ -49,7 +49,7 @@ inline void rms_norm_gated_core(
         FDTYPE rms = hls::sqrt(mean + eps);
         FDTYPE scale = FDTYPE(1) / rms;
         
-        for (int i = 0; i < VEC_OUTPUT_LINEAR; i++) {
+        for (int i = 0; i < VEC_I; i++) {
             #pragma HLS PIPELINE II=1
             
             DTYPE_VEC gated_vec = gated_buffer[i];
