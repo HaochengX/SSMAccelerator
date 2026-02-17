@@ -1,0 +1,38 @@
+INFO: [SIM 2] *************** CSIM start ***************
+INFO: [SIM 4] CSIM will launch CLANG as the compiler.
+   Compiling ../../../../tb_ssm.cpp in debug mode
+   Compiling ../../../../ssm.cpp in debug mode
+   Generating csim.exe
+[TB] Using bins dir: bins_raw
+[TB] STATE_SCALAR=128  STATE_V(STATE_T)=16  D_T=320  C2_T=640  CIN_T=1354  VEC_FACTOR=8
+[TB] H0_LEN=10240  H1_LEN=10240
+[TB] TOL_OUT=0.05  TOL_H1=0.06  (set TB_TOL_OUT/TB_TOL_H1 to override)
+[TB] A_fixed loaded (vec) elems=128 tokens=16
+[TB] RMS_weight loaded (vec) elems=2560 tokens=320
+[TB] D_diag loaded (vec) elems=5120 tokens=640
+[TB] kernel_in loaded (scalar) elems=4
+[TB] x_in loaded (vec) elems=2560 tokens=320
+[TB] h0_in loaded (vec) elems=81920 tokens=10240
+[TB] conv_state_in loaded (vec) elems=24 tokens=3
+[TB] W_inproj loaded (vec) elems=3466240
+[TB] W_delta loaded (vec) elems=3276800
+[TB] W_out loaded (vec) elems=1638400
+[TB] out_ref loaded (vec) elems=2560 tokens=320
+[TB] h1_ref loaded (vec) elems=81920 tokens=10240
+[DUT] SSMU_USE_INT8=0
+[DUT] TRACE_DDR=0 H1_OUT=1 H1_OUT_LEN=10240
+[DUT] TREE reduction enabled for inproj/outproj jj (J_TILE=8)
+[DUT] ALL read-only m_axi marked read_only; burst=128, outstanding=32
+[DUT] STATE_SCALAR=128 STATE_V(STATE_T)=16
+[DUT] TRACE_STREAMS=0
+DUT out[0]: 0.030762 -0.030762 0.128174 0.003174
+REF out[0]: 0.030518 -0.031006 0.127930 0.003906
+[TB] H1_out produced (stream.size snapshot) = 10240, compare_len=10240
+DUT h1[0]: 0.437012 0.281006 0.091064 0.520020
+REF h1[0]: 0.437500 0.275146 0.089844 0.513428
+[TB] max_abs_diff(out) = 2.441406e-03
+[TB] max_abs_diff(h1 ) = 2.148438e-02
+[TB][PASS] Golden match within tolerance.
+INFO [HLS SIM]: The maximum depth reached by any hls::stream() instance in the design is 27080
+INFO: [SIM 1] CSim done with 0 errors.
+INFO: [SIM 3] *************** CSIM finish ***************
