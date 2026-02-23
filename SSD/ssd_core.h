@@ -251,36 +251,27 @@ inline void ssd_diag_block(
     hls::stream<DTYPE_VEC>& L_stream,    
     hls::stream<DTYPE_VEC>& y_diag_stream
 ) {
+    const int K_UNROLL = 8;   // （8/16/32）
     
-    BATCH_LOOP: for (int batch = 0; batch < BATCH; batch++) {
-        #pragma HLS LOOP_TRIPCOUNT min=1 max=32
-        
         SEQUENCE_LOOP: for (int seq_chunk = 0; seq_chunk < LENGTH / CHUNK; seq_chunk++) {
-            #pragma HLS LOOP_TRIPCOUNT min=1 max=16
-            
             HEAD_LOOP: for (int head = 0; head < H; head++) {
-                #pragma HLS LOOP_TRIPCOUNT min=1 max=8
                 
                 FDTYPE Bx_buffer[CHUNK][P];
-                FDTYPE LBx_buffer[CHUNK][N];
-                FDTYPE Y_buffer[CHUNK][P];
+                #pragma HLS ARRAY_PARTITION variable=Bx_buffer complete dim=2   
                 
+                FDTYPE LBx_buffer[CHUNK][N];
+                #pragma HLS ARRAY_PARTITION variable=LBx_buffer cyclic factor=K_UNROLL dim=2  
                 
                 COMPUTE_BX_LOOP: for (int i = 0; i < VEC_PER_CHUNK; i++) {
-                    
                     DTYPE_VEC x_vec = x_stream.read();
                     DTYPE_VEC B_vec = B_stream.read();
-                    
                     for (int v = 0; v < VEC_FACTOR; v++) {
-                        #pragma HLS PIPELINE
                         int idx = i * VEC_FACTOR + v;
-                        
                         if (idx < CHUNK) {
                             FDTYPE x_val = (FDTYPE)x_vec[v];
                             FDTYPE B_val = (FDTYPE)B_vec[v];
-                            
-                            for (int d = 0; d < P; d++) {
-                                #pragma HLS UNROLL factor=2
+                            for (int d = 0; d < P; d++) {  
+                                #pragma HLS UNROLL
                                 Bx_buffer[idx][d] = B_val * x_val;
                             }
                         }
@@ -288,63 +279,67 @@ inline void ssd_diag_block(
                 }
                 
                 COMPUTE_LBX_LOOP: for (int i = 0; i < CHUNK; i++) {
-                    
                     FDTYPE L_row[CHUNK];
-                    
-                    for (int j = 0; j < VEC_PER_CHUNK; j++) {
+                    #pragma HLS ARRAY_PARTITION variable=L_row complete
+                    READ_L_ROW: for (int jv = 0; jv < VEC_PER_CHUNK; jv++) {
                         #pragma HLS PIPELINE II=1
                         DTYPE_VEC L_vec = L_stream.read();
-                        
                         for (int v = 0; v < VEC_FACTOR; v++) {
                             #pragma HLS UNROLL
-                            int col_idx = j * VEC_FACTOR + v;
-                            if (col_idx < CHUNK) {
-                                L_row[col_idx] = (FDTYPE)L_vec[v];
-                            }
+                            int col = jv * VEC_FACTOR + v;
+                            L_row[col] = (FDTYPE)L_vec[v];
                         }
                     }
                     
-                    for (int k = 0; k < N; k++) {
-                        FDTYPE sum = FDTYPE(0);
+                    for (int k_base = 0; k_base < N; k_base += K_UNROLL) {
+                        #pragma HLS PIPELINE II=1
                         
-                        for (int j = 0; j < CHUNK; j++) {
-                            #pragma HLS PIPELINE
-                            sum += L_row[j] * Bx_buffer[j][k];
+                        FDTYPE sum[K_UNROLL];
+                        #pragma HLS ARRAY_PARTITION variable=sum complete
+                        
+                        for (int u = 0; u < K_UNROLL; u++) {
+                            #pragma HLS UNROLL
+                            sum[u] = 0;
                         }
                         
-                        LBx_buffer[i][k] = sum;
+                        for (int j = 0; j < CHUNK; j++) {
+                            FDTYPE L_val = L_row[j];
+                            for (int u = 0; u < K_UNROLL; u++) {
+                                #pragma HLS UNROLL
+                                sum[u] += L_val * Bx_buffer[j][k_base + u];  
+                            }
+                        }
+                        
+                        for (int u = 0; u < K_UNROLL; u++) {
+                            #pragma HLS UNROLL
+                            LBx_buffer[i][k_base + u] = sum[u];
+                        }
                     }
                 }
                 
                 COMPUTE_Y_DIAG_LOOP: for (int i = 0; i < VEC_PER_CHUNK; i++) {                    
                     DTYPE_VEC C_vec = C_stream.read();
                     DTYPE_VEC y_vec;
-                    
                     for (int v = 0; v < VEC_FACTOR; v++) {
-                        #pragma HLS PIPELINE
+                        #pragma HLS PIPELINE II=1
                         int idx = i * VEC_FACTOR + v;
-                        
                         if (idx < CHUNK) {
                             FDTYPE C_val = (FDTYPE)C_vec[v];
-                            FDTYPE sum = FDTYPE(0);
-                            
+                            FDTYPE sum = 0;
                             for (int k = 0; k < N; k++) {
-                                #pragma HLS UNROLL factor=2
+                                #pragma HLS UNROLL
                                 sum += C_val * LBx_buffer[idx][k];
                             }
-                            
                             y_vec[v] = (DTYPE)sum;
                         } else {
-                            y_vec[v] = DTYPE(0);
+                            y_vec[v] = 0;
                         }
                     }
-                    
                     y_diag_stream.write(y_vec);
                 }
             }
         }
     }
-}
 
 inline void compute_state(
     hls::stream<DTYPE_VEC>& A_cumsum_stream,  
@@ -383,41 +378,39 @@ inline void compute_state(
                     FDTYPE diff = A_cumsum_last - A_cumsum_buffer[l];
                     decay_states_buffer[l] = hls::exp(diff);
                 }
-                
-                FDTYPE state_buffer[P][N];
-                
-                INIT_STATE_LOOP: for (int p = 0; p < P; p++) {
-                    for (int n = 0; n < N; n++) {
-                        #pragma HLS PIPELINE
-                        state_buffer[p][n] = FDTYPE(0);
+            FDTYPE state_buffer[P][N];
+            #pragma HLS ARRAY_PARTITION variable=state_buffer complete dim=1
+            
+            INIT_STATE_LOOP: for (int p = 0; p < P; p++) {
+                for (int n = 0; n < N; n++) {
+                    #pragma HLS PIPELINE II=1
+                    state_buffer[p][n] = FDTYPE(0);
+                }
+            }
+            
+            FDTYPE total_product = 0;
+            for (int l = 0; l < VEC_PER_CHUNK; l++) {
+                DTYPE_VEC B_vec = B_stream.read();
+                DTYPE_VEC X_vec = X_stream.read();
+                FDTYPE decay_val = decay_states_buffer[l];
+                for (int v = 0; v < VEC_FACTOR; v++) {
+                    #pragma HLS PIPELINE II=1
+                    int element_idx = l * VEC_FACTOR + v;
+                    if (element_idx < CHUNK) {
+                        FDTYPE B_val = (FDTYPE)B_vec[v];
+                        FDTYPE X_val = (FDTYPE)X_vec[v];
+                        FDTYPE product = decay_val * B_val * X_val;
+                        total_product += product;
                     }
                 }
-                
-                COMPUTE_STATE_LOOP: for (int l = 0; l < VEC_PER_CHUNK; l++) {                    
-                    DTYPE_VEC B_vec = B_stream.read();
-                    DTYPE_VEC X_vec = X_stream.read();
-                    
-                    FDTYPE decay_val = decay_states_buffer[l];
-                    
-                    for (int v = 0; v < VEC_FACTOR; v++) {
-                        int element_idx = l * VEC_FACTOR + v;
-                        
-                        if (element_idx < CHUNK) {
-                            FDTYPE B_val = (FDTYPE)B_vec[v];
-                            FDTYPE X_val = (FDTYPE)X_vec[v];
-                            
-                            for (int n = 0; n < N; n++) {
-                                #pragma HLS PIPELINE
-                                FDTYPE product = decay_val * B_val * X_val;
-                                
-                                for (int p = 0; p < P; p++) {
-                                    #pragma HLS PIPELINE
-                                    state_buffer[p][n] += product;
-                                }
-                            }
-                        }
-                    }
+            }
+            
+            UPDATE_STATE_LOOP: for (int n = 0; n < N; n++) {
+                for (int p = 0; p < P; p++) {
+                    #pragma HLS PIPELINE II=1
+                    state_buffer[p][n] += total_product;
                 }
+            }
                 
                 OUTPUT_STATE_LOOP: for (int n_block = 0; n_block < N / VEC_FACTOR; n_block++) {
                     #pragma HLS PIPELINE II=1
@@ -663,32 +656,20 @@ inline void extract_A_last(
 ) {
 
 
-        
-        for (int chunk = 0; chunk < NUM_CHUNKS; chunk++) {
-            #pragma HLS LOOP_TRIPCOUNT min=1 max=16
-            
-            for (int l = 0; l < VEC_PER_CHUNK; l++) {
+    CHUNK_LOOP: for (int chunk = 0; chunk < NUM_CHUNKS; chunk++) {
+        for (int l = 0; l < VEC_PER_CHUNK - 1; l++) {
+            for (int vh = 0; vh < VEC_H; vh++) {
                 #pragma HLS PIPELINE II=1
-                
-                DTYPE_VEC A_vec = A_cumsum_stream.read();
-                
-                if (l == VEC_PER_CHUNK - 1) {
-                    DTYPE_VEC A_last_vec;
-                    for (int v = 0; v < VEC_FACTOR; v++) {
-                        #pragma HLS UNROLL
-                        if (v == VEC_FACTOR - 1) {
-                            A_last_vec[0] = A_vec[v]; 
-                        }
-                    }
-                    
-                    for (int head = 0; head < H; head++) {
-                        #pragma HLS PIPELINE II=1
-                        A_last_stream.write(A_last_vec);
-                    }
-                }
+                DTYPE_VEC tmp = A_cumsum_stream.read();
             }
         }
+        for (int vh = 0; vh < VEC_H; vh++) {
+            #pragma HLS PIPELINE II=1
+            DTYPE_VEC A_vec = A_cumsum_stream.read();
+            A_last_stream.write(A_vec);
+        }
     }
+}
 
 inline void combine_outputs(
     hls::stream<DTYPE_VEC>& Y_diag_stream, 
@@ -734,9 +715,6 @@ inline void state_to_output(
             #pragma HLS LOOP_TRIPCOUNT min=1 max=16
             
             FDTYPE states_buffer[H][P][N];
-            #pragma HLS ARRAY_PARTITION variable=states_buffer cyclic factor=2 dim=3
-            #pragma HLS ARRAY_PARTITION variable=states_buffer cyclic factor=2 dim=2
-            #pragma HLS ARRAY_PARTITION variable=states_buffer cyclic factor=2 dim=1
             
             for (int head = 0; head < H; head++) {
                 #pragma HLS LOOP_TRIPCOUNT min=1 max=8
@@ -778,7 +756,7 @@ inline void state_to_output(
                             FDTYPE sum = FDTYPE(0);
                             
                             for (int n = 0; n < N; n++) {
-                                #pragma HLS UNROLL factor=2
+                                #pragma HLS UNROLL
                                 
                                 FDTYPE C_val;
                                 if (n < VEC_FACTOR) {

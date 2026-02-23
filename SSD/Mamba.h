@@ -7,7 +7,7 @@
 #include <hls_math.h>
 #include <hls_vector.h>
 
-typedef ap_fixed<32, 10> DTYPE;
+typedef ap_fixed<16, 8> DTYPE;
 constexpr int BATCH=1; 
 constexpr int LENGTH=64;
 constexpr int DIM=2560;//model dimension
@@ -36,7 +36,7 @@ constexpr int VEC_PER_CHUNK = CHUNK / VEC_FACTOR;
 constexpr int VEC_PER_HEAD = P / VEC_FACTOR;
 constexpr int VEC_PER_STATE = (P * N) / VEC_FACTOR;
 
-typedef float FDTYPE;
+typedef ap_fixed<32, 16> FDTYPE;
 
 static inline DTYPE silu_elem(DTYPE a)
 {
