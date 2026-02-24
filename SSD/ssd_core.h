@@ -256,10 +256,10 @@ inline void ssd_diag_block(
         SEQUENCE_LOOP: for (int seq_chunk = 0; seq_chunk < LENGTH / CHUNK; seq_chunk++) {
             HEAD_LOOP: for (int head = 0; head < H; head++) {
                 
-                FDTYPE Bx_buffer[CHUNK][P];
+                DTYPE Bx_buffer[CHUNK][P];
                 #pragma HLS ARRAY_PARTITION variable=Bx_buffer complete dim=2   
                 
-                FDTYPE LBx_buffer[CHUNK][N];
+                DTYPE LBx_buffer[CHUNK][N];
                 #pragma HLS ARRAY_PARTITION variable=LBx_buffer cyclic factor=K_UNROLL dim=2  
                 
                 COMPUTE_BX_LOOP: for (int i = 0; i < VEC_PER_CHUNK; i++) {
@@ -380,7 +380,7 @@ inline void compute_state(
                 }
             FDTYPE state_buffer[P][N];
             #pragma HLS ARRAY_PARTITION variable=state_buffer complete dim=1
-            
+            #pragma HLS BIND_STORAGE variable=state_buffer type=ram_2p impl=bram
             INIT_STATE_LOOP: for (int p = 0; p < P; p++) {
                 for (int n = 0; n < N; n++) {
                     #pragma HLS PIPELINE II=1
@@ -406,18 +406,16 @@ inline void compute_state(
             }
             
             UPDATE_STATE_LOOP: for (int n = 0; n < N; n++) {
-                for (int p = 0; p < P; p++) {
                     #pragma HLS PIPELINE II=1
+                for (int p = 0; p < P; p++) {
                     state_buffer[p][n] += total_product;
                 }
             }
                 
                 OUTPUT_STATE_LOOP: for (int n_block = 0; n_block < N / VEC_FACTOR; n_block++) {
-                    #pragma HLS PIPELINE II=1
-                    
                     for (int p = 0; p < P; p++) {
+                        #pragma HLS PIPELINE II=1
                         DTYPE_VEC state_vec;
-                        
                         for (int v = 0; v < VEC_FACTOR; v++) {
                             #pragma HLS UNROLL
                             int n_idx = n_block * VEC_FACTOR + v;
@@ -512,7 +510,6 @@ inline void inter_chunk_recurrence(
     }
     
     FDTYPE states_buffer[NUM_CHUNKS][P][N];
-    
     READ_ALL_STATES_LOOP: for (int chunk_idx = 0; chunk_idx < NUM_CHUNKS; chunk_idx++) {
         #pragma HLS LOOP_TRIPCOUNT min=1 max=16
         
@@ -537,7 +534,7 @@ inline void inter_chunk_recurrence(
         #pragma HLS LOOP_TRIPCOUNT min=1 max=17
         
         FDTYPE new_state[P][N];
-        
+
         for (int p = 0; p < P; p++) {
             for (int n = 0; n < N; n++) {
                 #pragma HLS PIPELINE II=1
@@ -549,8 +546,8 @@ inline void inter_chunk_recurrence(
             FDTYPE decay_val = decay_chunk[z] * decay_chunk[c]; 
             
             for (int p = 0; p < P; p++) {
-                for (int n = 0; n < N; n++) {
                     #pragma HLS PIPELINE II=1
+                for (int n = 0; n < N; n++) {
                     new_state[p][n] += decay_val * states_buffer[c][p][n];
                 }
             }
