@@ -1,0 +1,48 @@
+INFO: [SIM 2] *************** CSIM start ***************
+INFO: [SIM 4] CSIM will launch CLANG as the compiler.
+   Compiling ../../../../ssm.cpp in debug mode
+   Generating csim.exe
+[TB] BUILD_TAG=tb_ssmu.cpp UPDATED_FOR_SSMU_NO_WBC + WSCALE_LOAD(PRESENCE) + COSIM_TOP_CALL_SSMU_STACK64 + CS_COMPARE + H1_DDR_FALLBACK + INTERLEAVE TAG_2026-02-24_v2
+[TB] Using bins dir: bins_raw
+[TB] STATE_SCALAR=128  STATE_V(STATE_T)=16  D_T=320  C2_T=640  CIN_T=1354  VEC_FACTOR=8
+[TB] H0_LEN=10240  H1_LEN=10240  CONV_K=4
+[TB] TOL_OUT=0.05  TOL_H1=0.06  TOL_CS=0.06  TB_STEPS=1  TB_TOPK=10  TB_DRAIN_TRACE=1
+[TB] TB_INTERLEAVE=0  TB_PRINT_TOKEN=0
+[TB] A_fixed loaded (vec) elems=128 tokens=16
+[TB] RMS_weight loaded (vec) elems=2560 tokens=320
+[TB] D_diag loaded (vec) elems=5120 tokens=640
+[TB] W_inproj loaded (vec) elems=3466240
+[TB] W_delta loaded (vec) elems=3276800
+[TB] W_out loaded (vec) elems=1638400
+[TB] w_scale_in default = 0.000000
+[TB] w_scale_delta default = 0.000000
+[TB] w_scale_out default = 0.000000
+[TB] runtime scales: w_scale_in=0.000000  w_scale_delta=0.000000  w_scale_out=0.000000
+[TB] h0_in(step0) loaded (vec) elems=81920 tokens=10240
+[TB] conv_state_in(step0) loaded (vec) elems=24 tokens=3
+
+[TB] ====================== STEP 0/1 ======================
+[TB] kernel_in loaded (scalar) elems=4
+[TB] x_in loaded (vec) elems=2560 tokens=320
+[TB] out_ref loaded (vec) elems=2560 tokens=320
+[TB] h1_ref loaded (vec) elems=81920 tokens=10240
+[TB] conv_state_out_ref loaded (vec) elems=24 tokens=3
+[DUT] SSMU_USE_INT8=0
+[DUT] TRACE_DDR=0 H1_OUT=1 H1_OUT_LEN=10240
+[DUT] STATE_SCALAR=128 STATE_V(STATE_T)=16
+[DUT] LATENCY_MODE=1 STREAM_DEPTH=700 TRACE_DEPTH=800 TILE_DEPTH=2
+[TB] >>> PRINT_BEGIN token=0
+DUT out[t]: 0.024658 -0.032227 0.124756 0.010498
+REF out[t]: 0.030518 -0.031006 0.127930 0.003906
+DUT h1[t]: 0.437012 0.281006 0.091064 0.520020
+REF h1[t]: 0.437500 0.275146 0.089844 0.513428
+[TB] >>> PRINT_END
+[TB] max_abs_diff(out) = 4.956055e-02
+[TB] max_abs_diff(h1 ) = 2.148438e-02
+[TB] max_abs_diff(cs ) = 2.685547e-03
+[TB][STEP 0][PASS] Golden match within tolerance.
+
+[TB][PASS] ALL STEPS PASS.
+INFO [HLS SIM]: The maximum depth reached by any hls::stream() instance in the design is 27080
+INFO: [SIM 1] CSim done with 0 errors.
+INFO: [SIM 3] *************** CSIM finish ***************
