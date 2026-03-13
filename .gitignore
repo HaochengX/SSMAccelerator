@@ -1,0 +1,21 @@
+# SSM_accel build artifacts
+hw/hls/syn_result/
+hw/hls/log/
+*.log
+*.o
+*.d
+
+# Vitis HLS generated
+*.tcl
+!hw/hls/script/run_hls.py
+solution*/
+hls.app
+
+# Editor
+.vscode/
+*.swp
+*~
+
+# Python
+__pycache__/
+*.pyc
