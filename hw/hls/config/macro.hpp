@@ -404,7 +404,7 @@ static inline ACC_T tree_sum8(ACC_T p0, ACC_T p1, ACC_T p2, ACC_T p3,
 #endif
 
 #ifndef SSMU_AXI_RO_TUNE
-#define SSMU_AXI_RO_TUNE max_read_burst_length=128 num_read_outstanding=32
+#define SSMU_AXI_RO_TUNE max_read_burst_length=32 num_read_outstanding=8
 #endif
 
 #endif // __SSMU_MACRO_HPP__

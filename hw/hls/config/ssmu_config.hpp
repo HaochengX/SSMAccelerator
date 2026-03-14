@@ -199,80 +199,13 @@ static inline void vset(Q8VEC& v, unsigned idx, Q8_T val) {
 #endif
 
 // =============================================================
-// TOP prototype (MUST match ssm.cpp SSMU() signature)
-//   LOW-RANK v3 interface
+// Rank constant (used by src/ headers)
 // =============================================================
 #define SSMU_RANK 1024
 #define SSMU_RANK_T (SSMU_RANK / VEC_FACTOR)
 
-void SSMU(
-    hls::stream<DTYPE>&      kernel_in,
-
-    const DTYPE_VEC          A_fixed[SSMU_STATE_T],
-    const DTYPE_VEC          RMS_weight[SSMU_D_T],
-    const DTYPE_VEC          RMS_weight_2[SSMU_C2_T],
-
-    const W_VEC              W_in_1[SSMU_D_T][SSMU_RANK_T],
-    const W_VEC              W_in_2[SSMU_RANK_T][SSMU_C2_T],
-    const W_VEC              W_in_nonlr[SSMU_D_T][(SSMU_C2_T + SSMU_CH_T + 2*SSMU_STATE_T)],
-
-    const W_VEC              W_delta[SSMU_C2_T][SSMU_C2_T],
-
-    const W_VEC              W_out_A[SSMU_D_T][SSMU_RANK_T],
-    const W_VEC              W_out_B[SSMU_RANK_T][SSMU_C2_T],
-
-    const DTYPE_VEC          D_diag[SSMU_C2_T],
-
-    hls::stream<DTYPE_VEC>&  X_in,
-    hls::stream<DTYPE_VEC>&  H0_in,
-
-    hls::stream<DTYPE_VEC>&  conv_state_in,
-    hls::stream<DTYPE_VEC>&  conv_state_out,
-
-    DTYPE_VEC*               C_ddr,
-    DTYPE_VEC*               H1_ddr,
-
-    hls::stream<DTYPE_VEC>&  H1_out,
-    hls::stream<DTYPE_VEC>&  out,
-
-    float                    w_scale_in,
-    float                    w_scale_delta,
-    float                    w_scale_out
-);
-
-extern "C" void SSMU_STACK64(
-    hls::stream<DTYPE>&      kernel_in,
-
-    const DTYPE_VEC          A_fixed[SSMU_STATE_T],
-    const DTYPE_VEC          RMS_weight[SSMU_D_T],
-    const DTYPE_VEC          RMS_weight_2[SSMU_C2_T],
-
-    const W_VEC              W_in_1[SSMU_D_T][SSMU_RANK_T],
-    const W_VEC              W_in_2[SSMU_RANK_T][SSMU_C2_T],
-    const W_VEC              W_in_nonlr[SSMU_D_T][(SSMU_C2_T + SSMU_CH_T + 2*SSMU_STATE_T)],
-
-    const W_VEC              W_delta[SSMU_C2_T][SSMU_C2_T],
-
-    const W_VEC              W_out_A[SSMU_D_T][SSMU_RANK_T],
-    const W_VEC              W_out_B[SSMU_RANK_T][SSMU_C2_T],
-
-    const DTYPE_VEC          D_diag[SSMU_C2_T],
-
-    hls::stream<DTYPE_VEC>&  X_in,
-    hls::stream<DTYPE_VEC>&  H0_in,
-
-    hls::stream<DTYPE_VEC>&  conv_state_in,
-    hls::stream<DTYPE_VEC>&  conv_state_out,
-
-    DTYPE_VEC*               C_ddr,
-    DTYPE_VEC*               H1_ddr,
-
-    hls::stream<DTYPE_VEC>&  H1_out,
-    hls::stream<DTYPE_VEC>&  out,
-
-    float                    w_scale_in,
-    float                    w_scale_delta,
-    float                    w_scale_out
-);
+// NOTE: SSMU() and SSMU_STACK64() prototypes live in src/top_ssmu.hpp
+//       (with extern "C" linkage). Do NOT forward-declare them here to
+//       avoid linkage-mismatch errors during co-simulation compilation.
 
 #endif // __SSMU_CONFIG_HPP__

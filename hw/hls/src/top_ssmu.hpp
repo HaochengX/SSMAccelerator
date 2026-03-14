@@ -16,8 +16,9 @@
 // ============================================================
 // AXI tuning macros
 // ============================================================
+// R14: burst 128→32, outstanding 32→8 (computation is bottleneck; ~36 BRAM_18K saved)
 #ifndef SSMU_AXI_RO_TUNE
-#define SSMU_AXI_RO_TUNE max_read_burst_length=128 num_read_outstanding=32
+#define SSMU_AXI_RO_TUNE max_read_burst_length=32 num_read_outstanding=8
 #endif
 
 // Stream depth: reduced from 650 -> 64 -> 16.
@@ -81,10 +82,11 @@ void SSMU(
 #pragma HLS INTERFACE ap_fifo   port=H1_out
 #pragma HLS INTERFACE ap_fifo   port=out
 
-#pragma HLS INTERFACE m_axi port=A_fixed      offset=slave bundle=gmemA      depth=STATE_V             SSMU_AXI_RO_TUNE
-#pragma HLS INTERFACE m_axi port=RMS_weight   offset=slave bundle=gmemRMS    depth=D_T                SSMU_AXI_RO_TUNE
-#pragma HLS INTERFACE m_axi port=RMS_weight_2 offset=slave bundle=gmemRMS2   depth=C2_T               SSMU_AXI_RO_TUNE
-#pragma HLS INTERFACE m_axi port=D_diag       offset=slave bundle=gmemD      depth=C2_T               SSMU_AXI_RO_TUNE
+// R11: A_fixed/RMS_weight/RMS_weight_2/D_diag merged into one bundle (saves 3 AXI adapters ~45 BRAM_18K + ~3.3K LUT)
+#pragma HLS INTERFACE m_axi port=A_fixed      offset=slave bundle=gmemConst  depth=STATE_V             SSMU_AXI_RO_TUNE
+#pragma HLS INTERFACE m_axi port=RMS_weight   offset=slave bundle=gmemConst  depth=D_T                SSMU_AXI_RO_TUNE
+#pragma HLS INTERFACE m_axi port=RMS_weight_2 offset=slave bundle=gmemConst  depth=C2_T               SSMU_AXI_RO_TUNE
+#pragma HLS INTERFACE m_axi port=D_diag       offset=slave bundle=gmemConst  depth=C2_T               SSMU_AXI_RO_TUNE
 
 // LOW-RANK weight interfaces (4 sub-matrices instead of 2 full matrices)
 #pragma HLS INTERFACE m_axi port=W_in_1       offset=slave bundle=gmemIn1    depth=SSMU_DEPTH_IN1      SSMU_AXI_RO_TUNE
@@ -94,8 +96,9 @@ void SSMU(
 #pragma HLS INTERFACE m_axi port=W_out_A      offset=slave bundle=gmemOutA   depth=SSMU_DEPTH_OUTA     SSMU_AXI_RO_TUNE
 #pragma HLS INTERFACE m_axi port=W_out_B      offset=slave bundle=gmemOutB   depth=SSMU_DEPTH_OUTB     SSMU_AXI_RO_TUNE
 
-#pragma HLS INTERFACE m_axi     port=C_ddr     offset=slave bundle=gmem0 depth=HUGE_LEN
-#pragma HLS INTERFACE m_axi     port=H1_ddr    offset=slave bundle=gmem1 depth=HUGE_LEN
+// R15: C_ddr/H1_ddr use minimal adapter (SSMU_ENABLE_TRACE_DDR=0 → almost never used)
+#pragma HLS INTERFACE m_axi     port=C_ddr     offset=slave bundle=gmem0 depth=HUGE_LEN max_read_burst_length=2 num_read_outstanding=1 max_write_burst_length=2 num_write_outstanding=1
+#pragma HLS INTERFACE m_axi     port=H1_ddr    offset=slave bundle=gmem1 depth=HUGE_LEN max_read_burst_length=2 num_read_outstanding=1 max_write_burst_length=2 num_write_outstanding=1
 #pragma HLS INTERFACE s_axilite port=C_ddr     bundle=control
 #pragma HLS INTERFACE s_axilite port=H1_ddr    bundle=control
 
@@ -226,8 +229,11 @@ void SSMU(
 // add_residual consumes X_residual only at END of chain (after out_proj) -> deadlock if too small.
 #pragma HLS STREAM variable=X_residual           depth=320
 #pragma HLS STREAM variable=X_normed             depth=SSMU_STREAM_DEPTH
-#pragma HLS STREAM variable=X_normed_lr          depth=SSMU_STREAM_DEPTH
-#pragma HLS STREAM variable=X_normed_nonlr       depth=SSMU_STREAM_DEPTH
+    // X_normed_lr/nonlr: Vitis merges all gmem_0 consumers into one process
+    // so the tee cannot drain these FIFOs concurrently.  Depth must cover the
+    // full token count to prevent deadlock in co-simulation RTL.
+#pragma HLS STREAM variable=X_normed_lr          depth=C2_T        // 640 tok
+#pragma HLS STREAM variable=X_normed_nonlr       depth=INP_NONLR_T // 682 tok
 
 #if SSMU_ENABLE_TRACE_STREAMS
 #pragma HLS STREAM variable=trace_rms            depth=SSMU_TRACE_DEPTH
@@ -449,7 +455,10 @@ extern "C" void SSMU_STACK64(
     float                    w_scale_delta,
     float                    w_scale_out
 ) {
-#pragma HLS INLINE off
+    // SSMU() is intentionally NOT marked INLINE off: by inlining it here,
+    // SSMU_STACK64 inherits all the explicit m_axi bundle pragmas from SSMU()
+    // directly, preventing Vitis from merging dataflow processes that share
+    // the same default 'gmem' bundle (which causes co-simulation deadlocks).
 
     SSMU(kernel_in,
          A_fixed, RMS_weight, RMS_weight_2,

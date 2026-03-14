@@ -55,6 +55,13 @@ config_array_partition -throughput_driven off
 config_interface -m_axi_buffer_impl bram
 config_export -vivado_clock {vivado_clock_period}
 
+# 8b. Co-simulation depth for raw-pointer (m_axi) ports that have no
+#     array-dimension to infer from.  The depth must be >= the maximum
+#     number of DTYPE_VEC elements the kernel can read/write in one call.
+#     HUGE_LEN = STATE_T * C2_T = 16 * 640 = 10240 vectors.
+set_directive_interface -mode m_axi -depth 10240 "{top_function}" C_ddr
+set_directive_interface -mode m_axi -depth 10240 "{top_function}" H1_ddr
+
 # 9. Execute the selected flow.
 if {{ {hls_exec} == 1 }} {{
     csim_design -ldflags {{-z stack-size=10485760}}

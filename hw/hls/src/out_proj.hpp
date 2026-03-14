@@ -31,9 +31,8 @@ static void stage6_out_yz_vec_local(
             ACC_T x  = (ACC_T)vget(xvec, l);
             ACC_T d  = (ACC_T)vget(dvec, l);
             ACC_T g  = (ACC_T)vget(gvec, l);
+            // R17: fabric BIND_OP removed — stage6 muls use DSP (saves ~6,400 LUT, costs ~32 DSP)
             ACC_T s6_dx, s6_yg;
-#pragma HLS BIND_OP variable=s6_dx op=mul impl=fabric
-#pragma HLS BIND_OP variable=s6_yg op=mul impl=fabric
             s6_dx = d * x;
             ACC_T y  = ht + s6_dx;
             s6_yg = y * g;

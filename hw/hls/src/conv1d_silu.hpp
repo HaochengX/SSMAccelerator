@@ -87,12 +87,8 @@ static void conv1d_silu_stream_local_with_state(
             DTYPE_VEC ssm_out;
             for (unsigned lane = 0; lane < (unsigned)VEC_FACTOR; ++lane) {
 #pragma HLS UNROLL
-                // v3: BIND_OP fabric → LUT-based conv multiplies, saves 4×8=32 DSPs
+                // R16: fabric BIND_OP removed — conv muls use DSP (saves ~12,800 LUT, costs ~32 DSP)
                 ACC_T cp0, cp1, cp2, cp3;
-#pragma HLS BIND_OP variable=cp0 op=mul impl=fabric
-#pragma HLS BIND_OP variable=cp1 op=mul impl=fabric
-#pragma HLS BIND_OP variable=cp2 op=mul impl=fabric
-#pragma HLS BIND_OP variable=cp3 op=mul impl=fabric
                 cp0 = (ACC_T)kernel_buffer[0] * (ACC_T)window0[lane];
                 cp1 = (ACC_T)kernel_buffer[1] * (ACC_T)window1[lane];
                 cp2 = (ACC_T)kernel_buffer[2] * (ACC_T)window2[lane];
