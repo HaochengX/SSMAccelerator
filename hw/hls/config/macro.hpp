@@ -178,25 +178,31 @@ static const int J_TILE  = 8;
 // =============================================================
 // Input projection layout constants
 // =============================================================
+// C2_T + CCONV_T + CH_T = 640+672+10 = 1322 = CIN_T (B/C come from conv, not in-proj)
 static const int SSMU_INPROJ_NEED_CIN_BC = (SSMU_C2_T + SSMU_CCONV_T + SSMU_CH_T);
 static_assert(SSMU_CIN_T == SSMU_INPROJ_NEED_CIN_BC,
-              "CIN_T must equal C2_T + CCONV_T + CH_T = 1322 (B/C come from conv output)");
+              "CIN_T must equal C2_T + CCONV_T + CH_T (B/C come from conv output)");
 
 static_assert((SSMU_RANK % VEC_FACTOR) == 0, "RANK must be divisible by VEC_FACTOR");
 static_assert((SSMU_RANK_T) % J_TILE == 0, "RANK_T must be divisible by J_TILE");
 
 static const int RANK_T = SSMU_RANK_T;   // 128
 
-static const int INP_Z_T      = C2_T;
-static const int INP_X_T      = C2_T;
-static const int INP_DT_T     = CH_T;
-static const int INP_B_T      = STATE_V;
-static const int INP_C_T      = STATE_V;
-static const int INP_TAIL_T   = INP_DT_T + INP_B_T + INP_C_T;
-static const int INP_NONLR_T  = INP_Z_T + INP_TAIL_T;
+// In-proj layout (low-rank v3):
+//   full-rank out: [ Z: C2_T ] + [ DT/B/C (tail): CH_T + STATE_V + STATE_V ]
+//   low-rank X:    [ X_mid: C2_T ] (separate low-rank path)
+//   total: Z(C2_T) + CCONV_T(dummy) + CH_T = CIN_T
+static const int INP_Z_T      = C2_T;       // 640  (Z gate)
+static const int INP_X_T      = C2_T;       // 640  (Low-rank X_mid output)
+static const int INP_DT_T     = CH_T;       // 10
+static const int INP_B_T      = STATE_V;    // 16
+static const int INP_C_T      = STATE_V;    // 16
+static const int INP_TAIL_T   = INP_DT_T + INP_B_T + INP_C_T;  // 42
+static const int INP_NONLR_T  = INP_Z_T + INP_TAIL_T;          // 682 (Z + DT+B+C)
 
-static_assert((INP_Z_T + INP_X_T + INP_TAIL_T) == CIN_T,
-              "Input projection split must match CIN_T");
+// CIN_T = Z + CCONV + CH = 640 + 672 + 10 = 1322 (non-LR path covers XBC=CCONV_T)
+static_assert((INP_Z_T + CCONV_T + CH_T) == CIN_T,
+              "Input projection split must match CIN_T (Z + CCONV + CH = 1322)");
 
 // Depth macros for m_axi
 #define SSMU_DEPTH_IN1    (SSMU_D_T  * SSMU_RANK_T)

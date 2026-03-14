@@ -52,22 +52,9 @@
 #include <vector>
 
 // ============================================================
-// Shapes from SSMU.h
+// Shape constants — defined in macro.hpp via top_ssmu.hpp
+// (D_T, C2_T, CCONV_T, CH_T, CIN_T, STATE_SCALAR, STATE_V, CONV_K, INP_NONLR_T)
 // ============================================================
-static const int D_T     = SSMU_D_T;
-static const int C2_T    = SSMU_C2_T;
-static const int CCONV_T = SSMU_CCONV_T;
-static const int CH_T    = SSMU_CH_T;
-static const int CIN_T   = SSMU_CIN_T;
-static const int CONV_K  = SSMU_K;
-
-#ifndef SSMU_STATE_T
-#define SSMU_STATE_T (SSMU_STATE / VEC_FACTOR)
-#endif
-
-static const int STATE_SCALAR = SSMU_STATE;
-static const int STATE_V      = SSMU_STATE_T;
-static const int INP_NONLR_T  = (C2_T + CH_T + 2 * STATE_V);
 
 #ifndef SSMU_ENABLE_H1_STREAM_OUT
 #define SSMU_ENABLE_H1_STREAM_OUT 1
@@ -78,10 +65,6 @@ static const int INP_NONLR_T  = (C2_T + CH_T + 2 * STATE_V);
 #endif
 
 static const int H0_LEN = SSMU_H1_OUT_LEN;
-
-#ifndef VEC_FACTOR
-#error "VEC_FACTOR must be defined in SSMU.h"
-#endif
 
 // ============================================================
 // Q4.12 packing matches make_bins_raw.py

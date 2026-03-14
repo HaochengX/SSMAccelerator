@@ -65,11 +65,15 @@
 
 // =============================================================
 // In-projection output channel count
-//   Layout expected by ssm.cpp (channel units):
-//   [ Z: C2 ] [ XBC: C_CONV ] [ DT: CH ] [ B: N ] [ C: N ]
+//   Layout in low-rank v3: [ Z: C2 ] [ X_mid: C2 ] [ DT: CH ]
+//   B/C come from conv output (not in-proj), so CIN = C2+C2+CH
+//   = 5120+5120+80 = 10320  => tiles = 10320/8 = 1290
+//   WAIT: original: SSMU_CIN_T = C2_T + CCONV_T + CH_T
+//                              = 640 + 672 + 10 = 1322
+//   => SSMU_C_IN = 1322 * CP = 10576
 // =============================================================
 #ifndef SSMU_C_IN
-#define SSMU_C_IN (SSMU_C2 + SSMU_C_CONV + SSMU_CH + 2 * SSMU_N) // 10832
+#define SSMU_C_IN (SSMU_C2 + SSMU_C_CONV + SSMU_CH) // 10576 (B/C NOT in in-proj output)
 #endif
 
 // =============================================================
